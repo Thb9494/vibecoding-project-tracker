@@ -547,6 +547,19 @@ ${task.description || '_(no description)_'}${contextBlock}
 _Copied from GraceBayGarage Vibecoding Project Tracker_`;
 }
 
+const IconCopy = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
 function CopyContextButton({ task, onCopied, stopClick = false }) {
   const [copied, setCopied] = useState(false);
 
@@ -562,14 +575,17 @@ function CopyContextButton({ task, onCopied, stopClick = false }) {
   return (
     <button
       onClick={handleClick}
-      className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold transition-all
-        ${copied
-          ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-          : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
-        }`}
       title="Copy as prompt context"
+      className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium border transition-all duration-200
+        ${copied
+          ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400'
+          : 'border-slate-200 dark:border-stone-600 bg-slate-50 dark:bg-stone-700/50 text-slate-400 dark:text-stone-400 hover:border-indigo-300 dark:hover:border-indigo-600 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30'
+        }`}
     >
-      {copied ? '✓ Copied!' : '⎘ Copy Context'}
+      <span className={`transition-transform duration-200 ${copied ? 'scale-110' : ''}`}>
+        {copied ? <IconCheck /> : <IconCopy />}
+      </span>
+      <span>{copied ? 'Copied!' : 'Copy Context'}</span>
     </button>
   );
 }
@@ -637,13 +653,19 @@ function DueTag({ task }) {
 
 // ── TaskCard ──────────────────────────────────────────────────────────────────
 
-function TaskCard({ task, onClick, onHandoff, getIcon }) {
+function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, isDragging }) {
   const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
 
   return (
     <div
+      draggable
+      onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; onDragStart(task); }}
+      onDragEnd={onDragEnd}
       onClick={onClick}
-      className={`cursor-pointer rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700`}
+      className={`cursor-grab active:cursor-grabbing rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all select-none
+        ${typeConfig.stripe}
+        ${tint.card || 'bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700'}
+        ${isDragging ? 'opacity-40 scale-95 rotate-1' : ''}`}
     >
       {/* top row: type badge + due-date progress tag */}
       <div className="flex items-center justify-between gap-2">
@@ -695,9 +717,28 @@ function TaskCard({ task, onClick, onHandoff, getIcon }) {
 
 // ── Column ────────────────────────────────────────────────────────────────────
 
-function Column({ stage, tasks, onCardClick, onHandoff, getIcon }) {
+function Column({ stage, tasks, onCardClick, onHandoff, getIcon, onDragStart, onDragEnd, onDrop, draggingId }) {
+  const [isOver, setIsOver] = useState(false);
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsOver(true);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setIsOver(false);
+    onDrop(stage.id);
+  }
+
   return (
-    <div className="flex flex-col gap-3 min-w-0 flex-1">
+    <div
+      className="flex flex-col gap-3 min-w-0 flex-1"
+      onDragOver={handleDragOver}
+      onDragLeave={() => setIsOver(false)}
+      onDrop={handleDrop}
+    >
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-stone-400">
           {stage.label}
@@ -707,8 +748,12 @@ function Column({ stage, tasks, onCardClick, onHandoff, getIcon }) {
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {tasks.length === 0 ? (
+      <div className={`flex flex-col gap-2 rounded-2xl p-1.5 min-h-24 transition-all duration-150
+        ${isOver && draggingId
+          ? 'bg-indigo-50 dark:bg-indigo-950/30 ring-2 ring-indigo-300 dark:ring-indigo-700 ring-offset-2'
+          : 'bg-transparent'}`}
+      >
+        {tasks.length === 0 && !isOver ? (
           <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-stone-700 p-4 text-center text-xs text-slate-400 dark:text-stone-500">
             Nothing here yet — keep going.
           </div>
@@ -720,8 +765,17 @@ function Column({ stage, tasks, onCardClick, onHandoff, getIcon }) {
               onClick={() => onCardClick(task)}
               onHandoff={onHandoff}
               getIcon={getIcon}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              isDragging={draggingId === task.id}
             />
           ))
+        )}
+        {/* drop target hint when hovering over empty column */}
+        {isOver && draggingId && tasks.every(t => t.id === draggingId) && (
+          <div className="rounded-xl border-2 border-dashed border-indigo-300 dark:border-indigo-600 p-4 text-center text-xs text-indigo-400">
+            Hier ablegen
+          </div>
         )}
       </div>
     </div>
@@ -737,8 +791,17 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [theme, toggleTheme] = useTheme();
   const [pickerFor, setPickerFor] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
 
   function getIcon(name) { return icons[name] ?? null; }
+
+  function handleDragStart(task) { setDraggingId(task.id); }
+  function handleDragEnd()       { setDraggingId(null); }
+  function handleDrop(newStatus) {
+    if (!draggingId) return;
+    setTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status: newStatus } : t));
+    setDraggingId(null);
+  }
 
   function openNew()      { setEditing('new'); }
   function openEdit(task) { setEditing(task); }
@@ -813,6 +876,10 @@ export default function App() {
             onCardClick={openEdit}
             onHandoff={handleHandoff}
             getIcon={getIcon}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDrop={handleDrop}
+            draggingId={draggingId}
           />
         ))}
       </main>
