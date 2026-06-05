@@ -15,7 +15,7 @@ export function TaskCard({ task, members, onClick, onHandoff, getIcon, projectNa
       onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; onDragStart?.(task); }}
       onDragEnd={onDragEnd}
       onClick={onClick}
-      className={`cursor-grab active:cursor-grabbing rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all select-none
+      className={`cursor-grab active:cursor-grabbing rounded-xl border-t border-r border-b p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all select-none
         ${typeConfig.stripe}
         bg-white dark:bg-zinc-800 border-slate-200 dark:border-stone-700
         ${isDragging ? 'opacity-40 scale-95 rotate-1' : ''}`}
