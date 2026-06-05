@@ -143,9 +143,9 @@ Keep the Context field of each real task up to date as you work. By the end of t
 
 Fill in:
 
-- **Team name:** `<TODO>`
-- **Tagline (one sentence):** `<TODO>`
-- **Tracker URL after deploy:** `<TODO>` (Vercel will give it to you)
+- **Team name:** GraceBayGarage
+- **Tagline (one sentence):** Built in the garage, shipped to the world.
+- **Tracker URL after deploy:** https://vibecoding-project-tracker.vercel.app
 
 ## 12. Out of scope (do not build)
 
