@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 /**
  * @typedef {Object} Task
@@ -87,7 +87,6 @@ export function useLocalStorage(key, initialValue) {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-// Design from Theresa (M6 tag-style): colored left stripe + icon per type
 const TYPE_CONFIG = {
   feature: {
     badge:  'bg-indigo-100 text-indigo-700',
@@ -127,6 +126,23 @@ const EMPTY_FORM = {
   assignee: TEAM[0],
   dueDate: '',
 };
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+function Toast({ message, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2800);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+      <div className="rounded-xl bg-slate-800 px-5 py-3 text-sm text-white shadow-xl">
+        {message}
+      </div>
+    </div>
+  );
+}
 
 // ── TaskModal ────────────────────────────────────────────────────────────────
 
@@ -279,7 +295,6 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
             </div>
           </div>
 
-          {/* Created date — read-only in edit mode */}
           {!isNew && (
             <p className="text-xs text-slate-400">Created: {task.createdDate}</p>
           )}
@@ -316,9 +331,9 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
   );
 }
 
-// ── TaskCard ──────────────────────────────────────────────────────────────────
+// ── TaskCard ─────────────────────────────────────────────────────────────────
 
-function TaskCard({ task, onClick }) {
+function TaskCard({ task, onClick, onHandoff }) {
   const isOverdue = task.dueDate && task.dueDate < today() && task.status !== 'done';
   const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
 
@@ -327,7 +342,7 @@ function TaskCard({ task, onClick }) {
       onClick={onClick}
       className={`cursor-pointer rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} ${isOverdue ? 'border-red-300' : 'border-slate-200'}`}
     >
-      {/* type badge with icon */}
+      {/* type badge */}
       <span className={`self-start rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
         {typeConfig.icon} {task.type}
       </span>
@@ -338,28 +353,41 @@ function TaskCard({ task, onClick }) {
         <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{task.description}</p>
       )}
 
-      {/* footer */}
-      <div className="mt-1 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>
+      {/* footer: avatar + handoff + due date */}
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>
             {initials(task.assignee)}
           </span>
-          <span className="text-xs text-slate-600">{task.assignee}</span>
+          <span className="text-xs font-medium text-slate-700">{task.assignee}</span>
         </div>
 
-        {task.dueDate && (
-          <span className={`text-xs font-medium ${isOverdue ? 'text-red-500' : 'text-slate-400'}`}>
-            {isOverdue ? '⚠ ' : ''}{task.dueDate}
-          </span>
-        )}
+        {/* hand-off dropdown — stopPropagation so it doesn't open the modal */}
+        <select
+          value=""
+          onClick={e => e.stopPropagation()}
+          onChange={e => { if (e.target.value) onHandoff(task, e.target.value); }}
+          className="text-xs text-slate-400 bg-transparent border border-slate-200 rounded-lg px-1.5 py-0.5 cursor-pointer hover:border-slate-400 focus:outline-none focus:border-indigo-400 transition-colors"
+        >
+          <option value="" disabled>Hand off →</option>
+          {TEAM.filter(name => name !== task.assignee).map(name => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
       </div>
+
+      {task.dueDate && (
+        <span className={`text-xs font-medium ${isOverdue ? 'text-red-500' : 'text-slate-400'}`}>
+          {isOverdue ? '⚠ ' : ''}{task.dueDate}
+        </span>
+      )}
     </div>
   );
 }
 
 // ── Column ────────────────────────────────────────────────────────────────────
 
-function Column({ stage, tasks, onCardClick }) {
+function Column({ stage, tasks, onCardClick, onHandoff }) {
   return (
     <div className="flex flex-col gap-3 min-w-0 flex-1">
       <div className="flex items-center justify-between px-1">
@@ -374,11 +402,16 @@ function Column({ stage, tasks, onCardClick }) {
       <div className="flex flex-col gap-2">
         {tasks.length === 0 ? (
           <div className="rounded-xl border-2 border-dashed border-slate-200 p-4 text-center text-xs text-slate-400">
-            No tasks
+            Nothing here yet — keep going.
           </div>
         ) : (
           tasks.map(task => (
-            <TaskCard key={task.id} task={task} onClick={() => onCardClick(task)} />
+            <TaskCard
+              key={task.id}
+              task={task}
+              onClick={() => onCardClick(task)}
+              onHandoff={onHandoff}
+            />
           ))
         )}
       </div>
@@ -391,7 +424,7 @@ function Column({ stage, tasks, onCardClick }) {
 export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', SEED_TASKS);
   const [editing, setEditing] = useState(null);
-  const isModalOpen = editing !== null;
+  const [toast, setToast] = useState(null);
 
   function openNew()      { setEditing('new'); }
   function openEdit(task) { setEditing(task); }
@@ -408,6 +441,11 @@ export default function App() {
     setTasks(prev => prev.filter(t => t.id !== id));
   }
 
+  const handleHandoff = useCallback((task, newAssignee) => {
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, assignee: newAssignee } : t));
+    setToast(`Handed off to ${newAssignee}. They've got it.`);
+  }, [setTasks]);
+
   return (
     <div className="min-h-screen p-6">
       <header className="mb-8 flex items-center justify-between">
@@ -416,11 +454,21 @@ export default function App() {
           <p className="text-sm text-slate-500">Team · Theresa · Murtaza · Makram</p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex gap-4 text-sm text-slate-500">
-            <span>{tasks.length} tasks</span>
-            <span className="text-indigo-600 font-medium">{tasks.filter(t => t.type === 'feature').length} features</span>
-            <span className="text-orange-500 font-medium">{tasks.filter(t => t.type === 'bug').length} bugs</span>
+        <div className="flex items-center gap-6">
+          {/* team overview strip */}
+          <div className="flex items-center gap-3">
+            {TEAM.map(name => {
+              const count = tasks.filter(t => t.assignee === name && t.status !== 'done').length;
+              return (
+                <div key={name} className="flex items-center gap-1.5">
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ${AVATAR_COLORS[name]}`}>
+                    {initials(name)}
+                  </span>
+                  <span className="text-xs text-slate-600">{name}</span>
+                  <span className="text-xs font-semibold text-slate-400">({count})</span>
+                </div>
+              );
+            })}
           </div>
 
           <button
@@ -439,11 +487,12 @@ export default function App() {
             stage={stage}
             tasks={tasks.filter(t => t.status === stage.id)}
             onCardClick={openEdit}
+            onHandoff={handleHandoff}
           />
         ))}
       </main>
 
-      {isModalOpen && (
+      {editing !== null && (
         <TaskModal
           task={editing === 'new' ? null : editing}
           onClose={closeModal}
@@ -451,6 +500,8 @@ export default function App() {
           onDelete={handleDelete}
         />
       )}
+
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );
 }
