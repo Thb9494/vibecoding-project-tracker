@@ -132,21 +132,21 @@ function useTheme() {
 
 const TYPE_CONFIG = {
   feature: {
-    badge:  'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
-    stripe: 'border-l-4 border-l-indigo-500',
+    badge:  'bg-feature/10 text-feature dark:bg-feature/20 dark:text-feature-soft',
+    stripe: 'border-l-4 border-l-feature',
     icon:   '⚡',
   },
   bug: {
-    badge:  'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
-    stripe: 'border-l-4 border-l-orange-500',
+    badge:  'bg-bug/10 text-bug dark:bg-bug/20 dark:text-bug-soft',
+    stripe: 'border-l-4 border-l-bug',
     icon:   '🐛',
   },
 };
 
 const AVATAR_COLORS = {
-  Theresa: 'bg-violet-500',
-  Murtaza: 'bg-emerald-500',
-  Makram:  'bg-amber-500',
+  Theresa: 'bg-team-theresa',
+  Murtaza: 'bg-team-murtaza',
+  Makram:  'bg-team-makram',
 };
 
 function initials(name) {
@@ -574,50 +574,84 @@ function CopyContextButton({ task, onCopied, stopClick = false }) {
   );
 }
 
-// ── Due-tint helper (M8) ─────────────────────────────────────────────────────
+// ── Due-date progress tag (M8, redesigned) ───────────────────────────────────
+// Cards share one background. Deadline urgency lives in a small pill whose
+// coloured fill grows as the deadline nears, with the time remaining written
+// inside it. Colour steps safe (green) → warning (gold) → overdue (red).
 
-function getDueTint(task) {
-  if (task.status === 'done' || !task.dueDate) {
-    return { card: '', label: '', icon: '' };
+const DUE_STYLES = {
+  overdue: { track: 'bg-due-overdue/10', fill: 'bg-due-overdue/35', text: 'text-due-overdue dark:text-due-overdue-soft', border: 'border-due-overdue/30' },
+  warning: { track: 'bg-due-warning/10', fill: 'bg-due-warning/35', text: 'text-due-warning dark:text-due-warning-soft', border: 'border-due-warning/30' },
+  safe:    { track: 'bg-due-safe/10',    fill: 'bg-due-safe/30',    text: 'text-due-safe dark:text-due-safe-soft',       border: 'border-due-safe/30' },
+  neutral: { track: 'bg-due-neutral/10', fill: 'bg-due-neutral/25', text: 'text-due-neutral dark:text-due-neutral-soft', border: 'border-due-neutral/30' },
+};
+
+const DAY_MS = 86_400_000;
+
+function getDue(task) {
+  if (!task.dueDate) return null;
+
+  const nowMs     = Date.now();
+  const dueMs     = Date.parse(`${task.dueDate}T23:59:59`);
+  const createdMs = task.createdDate ? Date.parse(`${task.createdDate}T00:00:00`) : nowMs - 3 * DAY_MS;
+  const total     = dueMs - createdMs;
+  // fill % = how far through the created→due window we are (caps at 100)
+  const pct       = total > 0 ? Math.min(100, Math.max(0, ((nowMs - createdMs) / total) * 100)) : 100;
+
+  if (task.status === 'done') {
+    return { ...DUE_STYLES.neutral, pct: 100, label: 'Done' };
   }
+
   const t = today();
-  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   if (task.dueDate < t) {
-    return {
-      card:  'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-900',
-      label: 'text-red-600 dark:text-red-400 font-semibold',
-      icon:  '🚨',
-    };
+    const daysLate = Math.floor((nowMs - dueMs) / DAY_MS);
+    return { ...DUE_STYLES.overdue, pct: 100, label: daysLate >= 1 ? `${daysLate}d late` : 'Overdue' };
   }
+
+  const tomorrow = new Date(nowMs + DAY_MS).toISOString().slice(0, 10);
   if (task.dueDate <= tomorrow) {
-    return {
-      card:  'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-900',
-      label: 'text-amber-600 dark:text-amber-400 font-semibold',
-      icon:  '⚠️',
-    };
+    return { ...DUE_STYLES.warning, pct, label: task.dueDate === t ? 'Due today' : '1d left' };
   }
-  return {
-    card:  'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900',
-    label: 'text-emerald-600 dark:text-emerald-400',
-    icon:  '',
-  };
+
+  const daysLeft = Math.round((Date.parse(`${task.dueDate}T12:00:00`) - Date.parse(`${t}T12:00:00`)) / DAY_MS);
+  return { ...DUE_STYLES.safe, pct, label: `${daysLeft}d left` };
+}
+
+function DueTag({ task }) {
+  const due = getDue(task);
+  if (!due) return null;
+  return (
+    <span
+      className={`relative inline-flex h-5 w-[86px] shrink-0 items-center justify-center overflow-hidden rounded-full border ${due.border} ${due.track}`}
+      title={`Due ${task.dueDate}`}
+    >
+      {/* coloured progress fill */}
+      <span className={`absolute inset-y-0 left-0 ${due.fill}`} style={{ width: `${due.pct}%` }} />
+      {/* remaining-time label, sitting on top of the bar */}
+      <span className={`relative z-10 px-1 text-[11px] font-semibold leading-none ${due.text}`}>
+        {due.label}
+      </span>
+    </span>
+  );
 }
 
 // ── TaskCard ──────────────────────────────────────────────────────────────────
 
 function TaskCard({ task, onClick, onHandoff, getIcon }) {
   const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
-  const tint = getDueTint(task);
 
   return (
     <div
       onClick={onClick}
-      className={`cursor-pointer rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} ${tint.card || 'bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700'}`}
+      className={`cursor-pointer rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700`}
     >
-      {/* type badge */}
-      <span className={`self-start rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
-        {typeConfig.icon} {task.type}
-      </span>
+      {/* top row: type badge + due-date progress tag */}
+      <div className="flex items-center justify-between gap-2">
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
+          {typeConfig.icon} {task.type}
+        </span>
+        <DueTag task={task} />
+      </div>
 
       <p className="text-sm font-semibold text-slate-800 dark:text-stone-100 leading-snug">{task.title}</p>
 
@@ -625,7 +659,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon }) {
         <p className="text-xs text-slate-500 dark:text-stone-400 leading-relaxed line-clamp-2">{task.description}</p>
       )}
 
-      {/* footer: avatar + handoff + due date */}
+      {/* footer: avatar + handoff */}
       <div className="mt-1 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 shrink-0">
           {(() => {
@@ -649,14 +683,6 @@ function TaskCard({ task, onClick, onHandoff, getIcon }) {
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-
-        {/* due date with tint color (M8) */}
-        {task.dueDate && (
-          <span className={`flex items-center gap-1 text-xs ${tint.label || 'text-slate-400 dark:text-stone-500'}`}>
-            {tint.icon && <span>{tint.icon}</span>}
-            {task.dueDate}
-          </span>
-        )}
       </div>
 
       {/* copy context button (M10) */}
