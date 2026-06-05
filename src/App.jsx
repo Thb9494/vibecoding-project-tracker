@@ -153,6 +153,60 @@ function initials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
 
+const GHIBLI_ICONS = [
+  { img: '/avatars/chihiro.png',      name: 'Chihiro' },
+  { img: '/avatars/no-face.png',      name: 'No-Face' },
+  { img: '/avatars/yubaba.png',       name: 'Yubaba' },
+  { img: '/avatars/frosch-diener.png',name: 'Frosch-Diener' },
+  { img: '/avatars/totoro.png',       name: 'Totoro' },
+  { img: '/avatars/chibi-totoro.png', name: 'Chibi-Totoro' },
+  { img: '/avatars/catbus.png',       name: 'Catbus' },
+  { img: '/avatars/calcifer.png',     name: 'Calcifer' },
+  { img: '/avatars/sophie.png',       name: 'Sophie' },
+  { img: '/avatars/howls-castle.png', name: "Howls Schloss" },
+];
+
+// ── GhibliPicker ─────────────────────────────────────────────────────────────
+
+function GhibliPicker({ name, current, onSelect, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-end pt-20 pr-6" onClick={onClose}>
+      <div
+        className="w-72 rounded-2xl bg-white shadow-2xl border border-slate-100 p-4 flex flex-col gap-3"
+        onClick={e => e.stopPropagation()}
+      >
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+          {name}'s Ghibli character
+        </p>
+        <div className="grid grid-cols-5 gap-2">
+          {GHIBLI_ICONS.map(({ img, name: charName }) => (
+            <button
+              key={img}
+              onClick={() => { onSelect(img); onClose(); }}
+              className={`flex flex-col items-center gap-1 rounded-xl p-1.5 transition-all hover:bg-indigo-50
+                ${current === img ? 'bg-indigo-100 ring-2 ring-indigo-400' : ''}`}
+              title={charName}
+            >
+              <img
+                src={img}
+                alt={charName}
+                className="h-12 w-12 rounded-full object-cover object-top"
+              />
+              <span className="text-[9px] text-slate-400 leading-tight text-center">{charName}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => { onSelect(null); onClose(); }}
+          className="text-xs text-slate-400 hover:text-slate-600 transition text-center"
+        >
+          ↩ Zurück zu Initialen
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
@@ -444,12 +498,15 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
         {/* footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-stone-700">
           {!isNew ? (
-            <button
-              onClick={handleDelete}
-              className="rounded-lg px-4 py-2 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
-            >
-              🗑 Delete
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDelete}
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+              >
+                🗑 Delete
+              </button>
+              <CopyContextButton task={task} />
+            </div>
           ) : <span />}
 
           <div className="flex gap-2">
@@ -469,6 +526,51 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Copy-Context helper (M10) ────────────────────────────────────────────────
+
+function buildPromptContext(task) {
+  const tool = task.contextTool ? ` · via ${task.contextTool}` : '';
+  const contextBlock = task.context
+    ? `\n\n## Context${tool}\n${task.context}`
+    : '\n\n## Context\n_(not yet filled in — add via the task modal)_';
+
+  return `# Task: ${task.title}
+**Type:** ${task.type} · **Status:** ${task.status} · **Assignee:** ${task.assignee}${task.dueDate ? ` · **Due:** ${task.dueDate}` : ''}
+
+## Description
+${task.description || '_(no description)_'}${contextBlock}
+
+---
+_Copied from GraceBayGarage Vibecoding Project Tracker_`;
+}
+
+function CopyContextButton({ task, onCopied, stopClick = false }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleClick(e) {
+    if (stopClick) e.stopPropagation();
+    navigator.clipboard.writeText(buildPromptContext(task)).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      if (onCopied) onCopied();
+    });
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold transition-all
+        ${copied
+          ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+          : 'border-slate-200 bg-white text-slate-500 hover:border-indigo-300 hover:text-indigo-600'
+        }`}
+      title="Copy as prompt context"
+    >
+      {copied ? '✓ Copied!' : '⎘ Copy Context'}
+    </button>
   );
 }
 
@@ -503,7 +605,7 @@ function getDueTint(task) {
 
 // ── TaskCard ──────────────────────────────────────────────────────────────────
 
-function TaskCard({ task, onClick, onHandoff }) {
+function TaskCard({ task, onClick, onHandoff, getIcon }) {
   const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
   const tint = getDueTint(task);
 
@@ -526,9 +628,12 @@ function TaskCard({ task, onClick, onHandoff }) {
       {/* footer: avatar + handoff + due date */}
       <div className="mt-1 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white dark:ring-stone-800 ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>
-            {initials(task.assignee)}
-          </span>
+          {(() => {
+            const icon = getIcon(task.assignee);
+            return icon
+              ? <img src={icon} alt={task.assignee} className="h-7 w-7 rounded-full object-cover object-top ring-2 ring-white dark:ring-stone-800 shrink-0" />
+              : <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white dark:ring-stone-800 ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>{initials(task.assignee)}</span>;
+          })()}
           <span className="text-xs font-medium text-slate-700 dark:text-stone-300">{task.assignee}</span>
         </div>
 
@@ -553,13 +658,18 @@ function TaskCard({ task, onClick, onHandoff }) {
           </span>
         )}
       </div>
+
+      {/* copy context button (M10) */}
+      <div onClick={e => e.stopPropagation()}>
+        <CopyContextButton task={task} stopClick />
+      </div>
     </div>
   );
 }
 
 // ── Column ────────────────────────────────────────────────────────────────────
 
-function Column({ stage, tasks, onCardClick, onHandoff }) {
+function Column({ stage, tasks, onCardClick, onHandoff, getIcon }) {
   return (
     <div className="flex flex-col gap-3 min-w-0 flex-1">
       <div className="flex items-center justify-between px-1">
@@ -583,6 +693,7 @@ function Column({ stage, tasks, onCardClick, onHandoff }) {
               task={task}
               onClick={() => onCardClick(task)}
               onHandoff={onHandoff}
+              getIcon={getIcon}
             />
           ))
         )}
@@ -595,9 +706,13 @@ function Column({ stage, tasks, onCardClick, onHandoff }) {
 
 export default function App() {
   const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', SEED_TASKS);
+  const [icons, setIcons] = useLocalStorage('vibetracker.icons', {});
   const [editing, setEditing] = useState(null);
   const [toast, setToast] = useState(null);
   const [theme, toggleTheme] = useTheme();
+  const [pickerFor, setPickerFor] = useState(null);
+
+  function getIcon(name) { return icons[name] ?? null; }
 
   function openNew()      { setEditing('new'); }
   function openEdit(task) { setEditing(task); }
@@ -632,11 +747,19 @@ export default function App() {
           <div className="flex items-center gap-3">
             {TEAM.map(name => {
               const count = tasks.filter(t => t.assignee === name && t.status !== 'done').length;
+              const icon = getIcon(name);
               return (
                 <div key={name} className="flex items-center gap-1.5">
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ${AVATAR_COLORS[name]}`}>
-                    {initials(name)}
-                  </span>
+                  <button
+                    onClick={() => setPickerFor(pickerFor === name ? null : name)}
+                    className="h-9 w-9 rounded-full ring-2 ring-white dark:ring-stone-700 hover:ring-indigo-300 transition-transform hover:scale-110 overflow-hidden flex items-center justify-center"
+                    title={`${name}'s Charakter ändern`}
+                  >
+                    {icon
+                      ? <img src={icon} alt={name} className="h-full w-full object-cover object-top" />
+                      : <span className={`flex h-full w-full items-center justify-center text-xs font-bold text-white ${AVATAR_COLORS[name]}`}>{initials(name)}</span>
+                    }
+                  </button>
                   <span className="text-xs text-slate-600 dark:text-stone-300">{name}</span>
                   <span className="text-xs font-semibold text-slate-400 dark:text-stone-500">({count})</span>
                 </div>
@@ -663,9 +786,19 @@ export default function App() {
             tasks={tasks.filter(t => t.status === stage.id)}
             onCardClick={openEdit}
             onHandoff={handleHandoff}
+            getIcon={getIcon}
           />
         ))}
       </main>
+
+      {pickerFor && (
+        <GhibliPicker
+          name={pickerFor}
+          current={getIcon(pickerFor)}
+          onSelect={emoji => setIcons(prev => ({ ...prev, [pickerFor]: emoji }))}
+          onClose={() => setPickerFor(null)}
+        />
+      )}
 
       {editing !== null && (
         <TaskModal
