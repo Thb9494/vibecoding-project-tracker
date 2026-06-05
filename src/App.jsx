@@ -578,8 +578,8 @@ function CopyContextButton({ task, onCopied, stopClick = false }) {
       title="Copy as prompt context"
       className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium border transition-all duration-200
         ${copied
-          ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400'
-          : 'border-slate-200 dark:border-stone-600 bg-slate-50 dark:bg-stone-700/50 text-slate-400 dark:text-stone-400 hover:border-indigo-300 dark:hover:border-indigo-600 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30'
+          ? 'border-emerald-400 bg-emerald-500 text-white dark:bg-emerald-600 dark:border-emerald-500'
+          : 'border-brand-primary bg-brand-primary text-white hover:bg-brand-dark dark:bg-brand-primary/90 dark:hover:bg-brand-dark'
         }`}
     >
       <span className={`transition-transform duration-200 ${copied ? 'scale-110' : ''}`}>
@@ -678,7 +678,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
       <p className="text-sm font-semibold text-slate-800 dark:text-stone-100 leading-snug">{task.title}</p>
 
       {task.description && (
-        <p className="text-xs text-slate-500 dark:text-stone-400 leading-relaxed line-clamp-2">{task.description}</p>
+        <p className="text-xs text-slate-600 dark:text-stone-400 leading-relaxed line-clamp-2">{task.description}</p>
       )}
 
       {/* footer: avatar + handoff */}
@@ -690,7 +690,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
               ? <img src={icon} alt={task.assignee} className="h-7 w-7 rounded-full object-cover object-top ring-2 ring-white dark:ring-stone-800 shrink-0" />
               : <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white dark:ring-stone-800 ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>{initials(task.assignee)}</span>;
           })()}
-          <span className="text-xs font-medium text-slate-700 dark:text-stone-300">{task.assignee}</span>
+          <span className="text-xs font-semibold text-slate-800 dark:text-stone-200">{task.assignee}</span>
         </div>
 
         {/* hand-off dropdown — stopPropagation so it doesn't open the modal */}
@@ -698,7 +698,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
           value=""
           onClick={e => e.stopPropagation()}
           onChange={e => { if (e.target.value) onHandoff(task, e.target.value); }}
-          className="text-xs text-slate-400 dark:text-stone-400 bg-transparent dark:[color-scheme:dark] border border-slate-200 dark:border-stone-600 rounded-lg px-1.5 py-0.5 cursor-pointer hover:border-slate-400 dark:hover:border-stone-400 focus:outline-none focus:border-brand-ring transition-colors"
+          className="text-xs text-slate-600 dark:text-stone-400 bg-transparent dark:[color-scheme:dark] border border-slate-300 dark:border-stone-600 rounded-lg px-1.5 py-0.5 cursor-pointer hover:border-brand-primary dark:hover:border-stone-400 focus:outline-none focus:border-brand-ring transition-colors"
         >
           <option value="" disabled>Hand off →</option>
           {TEAM.filter(name => name !== task.assignee).map(name => (
@@ -740,10 +740,10 @@ function Column({ stage, tasks, onCardClick, onHandoff, getIcon, onDragStart, on
       onDrop={handleDrop}
     >
       <div className="flex items-center justify-between px-1">
-        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-stone-400">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700 dark:text-stone-400">
           {stage.label}
         </h2>
-        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-stone-700 text-xs font-semibold text-slate-600 dark:text-stone-300">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 dark:bg-stone-700 text-xs font-semibold text-slate-800 dark:text-stone-200">
           {tasks.length}
         </span>
       </div>
@@ -828,7 +828,7 @@ export default function App() {
       <header className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-stone-100">Vibecoding Project Tracker</h1>
-          <p className="text-sm text-slate-500 dark:text-stone-400">Team · Theresa · Murtaza · Makram</p>
+          <p className="text-sm text-slate-600 dark:text-stone-400">Team · Theresa · Murtaza · Makram</p>
         </div>
 
         <div className="flex items-center gap-6">
@@ -849,8 +849,8 @@ export default function App() {
                       : <span className={`flex h-full w-full items-center justify-center text-xs font-bold text-white ${AVATAR_COLORS[name]}`}>{initials(name)}</span>
                     }
                   </button>
-                  <span className="text-xs text-slate-600 dark:text-stone-300">{name}</span>
-                  <span className="text-xs font-semibold text-slate-400 dark:text-stone-500">({count})</span>
+                  <span className="text-xs font-medium text-slate-800 dark:text-stone-200">{name}</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-stone-500">({count})</span>
                 </div>
               );
             })}

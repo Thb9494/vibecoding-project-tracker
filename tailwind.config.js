@@ -10,11 +10,11 @@ export default {
         // never read as the same colour. `DEFAULT` = light mode (solid fills
         // and text); `soft` = lighter shade for legible text on dark surfaces.
 
-        // Brand — olive green (header, "+" button, primary fills)
+        // Brand — DESIGN.md "San Francisco" blue
         brand: {
-          primary: '#5B7E3C',
-          dark:    '#4D6B33', // hover
-          ring:    '#7FA05E', // focus rings
+          primary: '#0058bc',
+          dark:    '#004493', // hover
+          ring:    '#4c4aca', // focus rings (secondary/indigo)
         },
 
         // Surface — from DESIGN.md Precision Minimalist palette
