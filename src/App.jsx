@@ -85,9 +85,17 @@ export function useLocalStorage(key, initialValue) {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-const TYPE_STYLES = {
-  feature: 'bg-blue-100 text-blue-700',
-  bug:     'bg-red-100  text-red-700',
+const TYPE_CONFIG = {
+  feature: {
+    badge:  'bg-indigo-100 text-indigo-700',
+    stripe: 'border-l-4 border-l-indigo-500',
+    icon:   '⚡',
+  },
+  bug: {
+    badge:  'bg-orange-100 text-orange-700',
+    stripe: 'border-l-4 border-l-orange-500',
+    icon:   '🐛',
+  },
 };
 
 const AVATAR_COLORS = {
@@ -104,13 +112,14 @@ function initials(name) {
 
 function TaskCard({ task }) {
   const isOverdue = task.dueDate && task.dueDate < new Date().toISOString().slice(0, 10) && task.status !== 'done';
+  const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
 
   return (
-    <div className={`rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-2 ${isOverdue ? 'border-red-300' : 'border-slate-200'}`}>
-      {/* type badge + title */}
+    <div className={`rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-2 ${typeConfig.stripe} ${isOverdue ? 'border-red-300' : 'border-slate-200'}`}>
+      {/* type badge + icon */}
       <div className="flex items-start justify-between gap-2">
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${TYPE_STYLES[task.type]}`}>
-          {task.type}
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
+          {typeConfig.icon} {task.type}
         </span>
       </div>
 
