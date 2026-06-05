@@ -1,24 +1,29 @@
 import { useState } from 'react';
-import { TYPE_CONFIG } from '../../constants';
+import { TYPE_CONFIG, AVATAR_COLORS } from '../../constants';
+import { initials } from '../../utils/ids';
+import { DueTag } from '../shared/DueTag';
 import { TaskModal } from '../board/TaskModal';
 
 // ── date helpers ──────────────────────────────────────────────────────────────
 
 const DAY_MS = 86_400_000;
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAY_LABELS  = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 function todayIso() { return new Date().toISOString().slice(0, 10); }
 function addDays(iso, n) { return new Date(Date.parse(iso + 'T12:00:00') + n * DAY_MS).toISOString().slice(0, 10); }
 
-// Monday of the week containing iso
 function weekStart(iso) {
-  const d = new Date(iso + 'T12:00:00');
-  const dow = d.getDay(); // 0=Sun
+  const dow = new Date(iso + 'T12:00:00').getDay();
   return addDays(iso, dow === 0 ? -6 : 1 - dow);
 }
 
-// Effective span of a task: createdDate → dueDate (or just createdDate if no dueDate)
+function lastOfMonth(iso) {
+  const [y, m] = iso.split('-').map(Number);
+  return new Date(y, m, 0).toISOString().slice(0, 10);
+}
+
+// effective span of a task: createdDate → dueDate (or just createdDate if no dueDate)
 function taskRange(task) {
   const s = task.createdDate;
   const e = task.dueDate ?? s;
@@ -30,45 +35,143 @@ function isActiveOnDay(task, day) {
   return day >= s && day <= e;
 }
 
-// ── task color ────────────────────────────────────────────────────────────────
+// ── task bar colors ───────────────────────────────────────────────────────────
 
-const TASK_COLORS = {
-  feature: 'bg-feature/15 dark:bg-feature/25 text-feature dark:text-feature-soft border-l-[3px] border-feature',
-  bug:     'bg-bug/15 dark:bg-bug/25 text-bug dark:text-bug-soft border-l-[3px] border-bug',
+const TASK_BAR = {
+  feature: 'bg-feature/20 dark:bg-feature/30 text-feature dark:text-feature-soft border-l-[3px] border-feature',
+  bug:     'bg-bug/20 dark:bg-bug/30 text-bug dark:text-bug-soft border-l-[3px] border-bug',
 };
 
-// ── sub-components ────────────────────────────────────────────────────────────
+// ── GanttRow: one task in the grid ────────────────────────────────────────────
 
-function TaskChip({ task, onClick }) {
+function GanttRow({ task, rowIdx, barStart, barEnd, todayCol, memberIndex, onClick }) {
   const tc = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
+  const barClass = TASK_BAR[task.type] ?? TASK_BAR.feature;
+  const avatarColor = AVATAR_COLORS[memberIndex >= 0 ? memberIndex % AVATAR_COLORS.length : 0] ?? 'bg-slate-400';
+  const showTitle = barEnd > barStart; // show title when bar spans ≥2 cols
+
   return (
-    <button onClick={onClick} title={task.title}
-      className={`w-full text-left px-1.5 py-0.5 text-[11px] font-medium truncate rounded-md transition-opacity hover:opacity-75 ${TASK_COLORS[task.type] ?? TASK_COLORS.feature}`}>
-      {tc.icon} {task.title}
-    </button>
+    <>
+      {/* label — sticky left */}
+      <div
+        style={{ gridRow: rowIdx, gridColumn: 1 }}
+        className="sticky left-0 z-20 bg-white dark:bg-stone-800 border-b border-r border-slate-100 dark:border-stone-700 flex items-center gap-2 px-3 overflow-hidden"
+      >
+        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${avatarColor}`}>
+          {initials(task.assignee)}
+        </span>
+        <span className="text-xs text-slate-700 dark:text-stone-200 truncate flex-1 min-w-0">
+          {tc.icon} {task.title}
+        </span>
+        <DueTag task={task} />
+      </div>
+
+      {/* today column highlight (rendered behind the bar) */}
+      {todayCol !== null && (
+        <div
+          style={{ gridRow: rowIdx, gridColumn: todayCol }}
+          className="bg-brand-primary/5 dark:bg-brand-primary/10 border-b border-slate-100 dark:border-stone-700 pointer-events-none"
+        />
+      )}
+
+      {/* task bar */}
+      <button
+        onClick={onClick}
+        title={`${task.title} · ${task.createdDate} → ${task.dueDate ?? 'no due date'}`}
+        style={{ gridRow: rowIdx, gridColumn: `${barStart} / ${barEnd + 1}` }}
+        className={`relative z-10 mx-1 my-2.5 flex items-center rounded-md px-2 text-[11px] font-semibold truncate transition-opacity hover:opacity-70 ${barClass}`}
+      >
+        {showTitle
+          ? <><span className="mr-1 shrink-0">{tc.icon}</span><span className="truncate">{task.title}</span></>
+          : <span>{tc.icon}</span>
+        }
+      </button>
+    </>
   );
 }
 
-function EventBar({ task, colStart, colEnd, startsHere, endsHere, onClick }) {
-  const tc = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
-  const round = startsHere && endsHere ? 'rounded-md'
-              : startsHere             ? 'rounded-l-md'
-              : endsHere               ? 'rounded-r-md'
-              : '';
+// ── GanttGrid: shared layout for week + month timeline views ──────────────────
+
+function GanttGrid({ columns, windowTasks, getBarPositions, todayCol, members, onTaskClick }) {
+  const colCount = columns.length;
+
   return (
-    <button onClick={onClick} title={task.title}
-      style={{ gridColumn: `${colStart} / ${colEnd + 1}` }}
-      className={`text-left px-2 py-0.5 text-xs font-medium truncate transition-opacity hover:opacity-75 ${TASK_COLORS[task.type] ?? TASK_COLORS.feature} ${round}`}>
-      {startsHere && <>{tc.icon} {task.title}</>}
-    </button>
+    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `200px repeat(${colCount}, minmax(72px, 1fr))`,
+          gridTemplateRows: `44px${windowTasks.length > 0 ? ` repeat(${windowTasks.length}, 48px)` : ' 72px'}`,
+          minWidth: 200 + colCount * 72,
+        }}
+      >
+        {/* header: task label cell */}
+        <div
+          style={{ gridRow: 1, gridColumn: 1 }}
+          className="sticky left-0 z-30 flex items-center px-4 border-b border-r border-slate-200 dark:border-stone-700 bg-slate-50/90 dark:bg-stone-900"
+        >
+          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-stone-500">
+            Task
+          </span>
+        </div>
+
+        {/* header: time column labels */}
+        {columns.map((col, i) => (
+          <div
+            key={col.key}
+            style={{ gridRow: 1, gridColumn: i + 2 }}
+            className={`flex flex-col items-center justify-center border-b border-l border-slate-100 dark:border-stone-700
+              ${col.isToday ? 'bg-brand-primary/10 dark:bg-brand-primary/15' : 'bg-slate-50/90 dark:bg-stone-900'}`}
+          >
+            <span className={`text-[11px] font-semibold uppercase ${col.isToday ? 'text-brand-primary dark:text-brand-ring' : 'text-slate-400 dark:text-stone-500'}`}>
+              {col.label}
+            </span>
+            {col.sublabel && (
+              <span className={`text-sm font-bold leading-tight ${col.isToday ? 'text-brand-primary dark:text-brand-ring' : 'text-slate-700 dark:text-stone-200'}`}>
+                {col.sublabel}
+              </span>
+            )}
+          </div>
+        ))}
+
+        {/* empty state */}
+        {windowTasks.length === 0 && (
+          <div
+            style={{ gridRow: 2, gridColumn: `1 / ${colCount + 2}` }}
+            className="flex items-center justify-center text-xs text-slate-400 dark:text-stone-500"
+          >
+            No tasks in this period.
+          </div>
+        )}
+
+        {/* task rows */}
+        {windowTasks.map((task, i) => {
+          const pos = getBarPositions(task);
+          if (!pos) return null;
+          const memberIdx = members.findIndex(m => m.name === task.assignee);
+          return (
+            <GanttRow
+              key={task.id}
+              task={task}
+              rowIdx={i + 2}
+              barStart={pos.colStart}
+              barEnd={pos.colEnd}
+              todayCol={todayCol}
+              memberIndex={memberIdx}
+              onClick={() => onTaskClick(task)}
+            />
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-// ── main component ────────────────────────────────────────────────────────────
+// ── CalendarView ──────────────────────────────────────────────────────────────
 
 export function CalendarView({ project, onUpdateProject }) {
-  const [view,   setView]   = useState('month');
-  const [anchor, setAnchor] = useState(todayIso());
+  const [view,    setView]    = useState('week');
+  const [anchor,  setAnchor]  = useState(todayIso());
   const [editing, setEditing] = useState(null);
   const { tasks = [], members = [], name: projectName } = project;
   const today = todayIso();
@@ -90,39 +193,21 @@ export function CalendarView({ project, onUpdateProject }) {
     }
   }
 
-  // ── visible days + header label ─────────────────────────────────────────────
-  let visibleDays, headerLabel;
-
+  // ── header label ────────────────────────────────────────────────────────────
+  let headerLabel;
   if (view === 'day') {
-    visibleDays = [anchor];
-    const d = new Date(anchor + 'T12:00:00');
-    headerLabel = d.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-
+    headerLabel = new Date(anchor + 'T12:00:00').toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   } else if (view === 'week') {
     const ws = weekStart(anchor);
-    visibleDays = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
-    const s = new Date(visibleDays[0] + 'T12:00:00');
-    const e = new Date(visibleDays[6] + 'T12:00:00');
-    headerLabel = s.getMonth() === e.getMonth()
-      ? `${MONTH_NAMES[s.getMonth()]} ${s.getFullYear()}`
-      : `${MONTH_NAMES[s.getMonth()]} – ${MONTH_NAMES[e.getMonth()]} ${e.getFullYear()}`;
-
+    const ds = new Date(ws + 'T12:00:00');
+    const de = new Date(addDays(ws, 6) + 'T12:00:00');
+    headerLabel = ds.getMonth() === de.getMonth()
+      ? `${MONTH_NAMES[ds.getMonth()]} ${ds.getFullYear()}`
+      : `${MONTH_NAMES[ds.getMonth()].slice(0, 3)} – ${MONTH_NAMES[de.getMonth()].slice(0, 3)} ${de.getFullYear()}`;
   } else {
     const [y, m] = anchor.split('-').map(Number);
-    const fm = `${y}-${String(m).padStart(2, '0')}-01`;
-    const ws = weekStart(fm);
-    visibleDays = Array.from({ length: 42 }, (_, i) => addDays(ws, i));
     headerLabel = `${MONTH_NAMES[m - 1]} ${y}`;
   }
-
-  const windowStart = visibleDays[0];
-  const windowEnd   = visibleDays[visibleDays.length - 1];
-
-  // tasks that touch the visible window
-  const windowTasks = tasks.filter(t => {
-    const [s, e] = taskRange(t);
-    return e >= windowStart && s <= windowEnd;
-  });
 
   // ── task crud ────────────────────────────────────────────────────────────────
   function handleSave(saved) {
@@ -134,36 +219,24 @@ export function CalendarView({ project, onUpdateProject }) {
     setEditing(null);
   }
 
-  // ── week event bars ──────────────────────────────────────────────────────────
-  function weekBars(weekDays) {
-    return windowTasks.flatMap(task => {
-      const [ts, te] = taskRange(task);
-      const wStart = weekDays[0], wEnd = weekDays[6];
-      if (te < wStart || ts > wEnd) return [];
-      const cs = weekDays.indexOf(ts < wStart ? wStart : ts) + 1;
-      const ce = weekDays.indexOf(te > wEnd   ? wEnd   : te) + 1;
-      if (cs === 0 || ce === 0) return [];
-      return [{ task, colStart: cs, colEnd: ce, startsHere: ts >= wStart, endsHere: te <= wEnd }];
-    });
-  }
-
   // ── toolbar ──────────────────────────────────────────────────────────────────
   const toolbar = (
     <div className="flex items-center justify-between mb-5">
       <div className="flex items-center gap-2">
-        <button onClick={() => setAnchor(todayIso())}
-          className="rounded-lg border border-slate-200 dark:border-stone-600 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-stone-300 hover:bg-slate-50 dark:hover:bg-stone-800 transition">
+        <button
+          onClick={() => setAnchor(todayIso())}
+          className="rounded-lg border border-slate-200 dark:border-stone-600 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-stone-300 hover:bg-slate-50 dark:hover:bg-stone-800 transition"
+        >
           Today
         </button>
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="rounded-l-lg border border-slate-200 dark:border-stone-600 px-2.5 py-1.5 text-sm text-slate-500 dark:text-stone-400 hover:bg-slate-50 dark:hover:bg-stone-800 transition leading-none">‹</button>
-          <button onClick={() => navigate(1)}  className="rounded-r-lg border border-l-0 border-slate-200 dark:border-stone-600 px-2.5 py-1.5 text-sm text-slate-500 dark:text-stone-400 hover:bg-slate-50 dark:hover:bg-stone-800 transition leading-none">›</button>
+        <div className="flex">
+          <button onClick={() => navigate(-1)} className="rounded-l-lg border border-slate-200 dark:border-stone-600 px-2.5 py-1.5 text-sm leading-none text-slate-500 dark:text-stone-400 hover:bg-slate-50 dark:hover:bg-stone-800 transition">‹</button>
+          <button onClick={() => navigate(1)}  className="rounded-r-lg border border-l-0 border-slate-200 dark:border-stone-600 px-2.5 py-1.5 text-sm leading-none text-slate-500 dark:text-stone-400 hover:bg-slate-50 dark:hover:bg-stone-800 transition">›</button>
         </div>
-        <span className="text-lg font-bold text-slate-900 dark:text-stone-100 min-w-[220px]">{headerLabel}</span>
+        <span className="text-lg font-bold text-slate-900 dark:text-stone-100 min-w-[200px]">{headerLabel}</span>
       </div>
-
       <div className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-stone-600 p-1 bg-white dark:bg-stone-800">
-        {['day', 'week', 'month'].map(v => (
+        {['week', 'month', 'day'].map(v => (
           <button key={v} onClick={() => setView(v)}
             className={`rounded-lg px-3 py-1 text-xs font-semibold capitalize transition
               ${view === v ? 'bg-brand-primary text-white shadow-sm' : 'text-slate-500 dark:text-stone-400 hover:text-slate-800 dark:hover:text-stone-100'}`}>
@@ -174,9 +247,20 @@ export function CalendarView({ project, onUpdateProject }) {
     </div>
   );
 
-  // ── day view ─────────────────────────────────────────────────────────────────
+  const modal = editing && (
+    <TaskModal
+      task={editing}
+      members={members}
+      projectName={projectName}
+      onClose={() => setEditing(null)}
+      onSave={s => { handleSave(s); setEditing(null); }}
+      onDelete={handleDelete}
+    />
+  );
+
+  // ── day view (unchanged list) ─────────────────────────────────────────────────
   if (view === 'day') {
-    const dayTasks = windowTasks.filter(t => isActiveOnDay(t, anchor));
+    const dayTasks = tasks.filter(t => isActiveOnDay(t, anchor));
     return (
       <div className="px-6 py-10 pb-32">
         {toolbar}
@@ -189,7 +273,7 @@ export function CalendarView({ project, onUpdateProject }) {
               ? <p className="text-xs text-slate-400 dark:text-stone-500 py-6 text-center">No tasks on this day.</p>
               : dayTasks.map(task => (
                   <button key={task.id} onClick={() => setEditing(task)}
-                    className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-opacity hover:opacity-75 ${TASK_COLORS[task.type] ?? TASK_COLORS.feature}`}>
+                    className={`text-left px-3 py-2 rounded-xl text-sm font-medium transition-opacity hover:opacity-75 ${TASK_BAR[task.type] ?? TASK_BAR.feature}`}>
                     {(TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature).icon} {task.title}
                     {task.dueDate && <span className="ml-2 text-xs opacity-60">due {task.dueDate}</span>}
                   </button>
@@ -197,107 +281,116 @@ export function CalendarView({ project, onUpdateProject }) {
             }
           </div>
         </div>
-        {editing && <TaskModal task={editing} members={members} projectName={projectName}
-          onClose={() => setEditing(null)} onSave={s => { handleSave(s); setEditing(null); }} onDelete={handleDelete} />}
+        {modal}
       </div>
     );
   }
 
-  // ── week view ─────────────────────────────────────────────────────────────────
+  // ── week timeline (X-axis = days) ─────────────────────────────────────────────
   if (view === 'week') {
-    const bars = weekBars(visibleDays);
+    const ws = weekStart(anchor);
+    const visibleDays = Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+    const [wStart, wEnd] = [visibleDays[0], visibleDays[6]];
+
+    const windowTasks = tasks.filter(t => {
+      const [s, e] = taskRange(t);
+      return e >= wStart && s <= wEnd;
+    });
+
+    const columns = visibleDays.map(d => {
+      const dt  = new Date(d + 'T12:00:00');
+      const dow = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
+      return { key: d, label: DAY_SHORT[dow], sublabel: String(dt.getDate()), isToday: d === today };
+    });
+
+    const todayIdx = visibleDays.indexOf(today);
+    const todayCol = todayIdx >= 0 ? todayIdx + 2 : null;
+
+    const getBarPositions = (task) => {
+      const [ts, te] = taskRange(task);
+      if (te < wStart || ts > wEnd) return null;
+      const cs = ts < wStart ? wStart : ts;
+      const ce = te > wEnd   ? wEnd   : te;
+      const c1 = visibleDays.indexOf(cs);
+      const c2 = visibleDays.indexOf(ce);
+      if (c1 < 0 || c2 < 0) return null;
+      return { colStart: c1 + 2, colEnd: c2 + 2 };
+    };
+
     return (
       <div className="px-6 py-10 pb-32">
         {toolbar}
-        <div className="rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800 overflow-hidden">
-          {/* day headers */}
-          <div className="grid grid-cols-7 border-b border-slate-100 dark:border-stone-700">
-            {visibleDays.map(d => {
-              const isToday = d === today;
-              const dt = new Date(d + 'T12:00:00');
-              const dowIdx = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
-              return (
-                <div key={d} className={`border-l border-slate-100 dark:border-stone-700 first:border-l-0 px-2 py-2.5 text-center ${isToday ? 'bg-brand-primary/5 dark:bg-brand-primary/10' : ''}`}>
-                  <p className="text-[11px] text-slate-400 dark:text-stone-500 uppercase">{DAY_LABELS[dowIdx]}</p>
-                  <p className={`text-xl font-bold leading-snug ${isToday ? 'text-brand-primary dark:text-brand-ring' : 'text-slate-800 dark:text-stone-100'}`}>{dt.getDate()}</p>
-                </div>
-              );
-            })}
-          </div>
-          {/* event bars */}
-          <div className="p-2 min-h-[80px]"
-            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', rowGap: '3px' }}>
-            {bars.length === 0
-              ? <div className="col-span-7 text-center text-xs text-slate-400 dark:text-stone-500 py-6">No tasks this week.</div>
-              : bars.map(({ task, colStart, colEnd, startsHere, endsHere }) => (
-                  <EventBar key={task.id + '-' + colStart}
-                    task={task} colStart={colStart} colEnd={colEnd}
-                    startsHere={startsHere} endsHere={endsHere}
-                    onClick={() => setEditing(task)} />
-                ))
-            }
-          </div>
-        </div>
-        {editing && <TaskModal task={editing} members={members} projectName={projectName}
-          onClose={() => setEditing(null)} onSave={s => { handleSave(s); setEditing(null); }} onDelete={handleDelete} />}
+        <GanttGrid
+          columns={columns}
+          windowTasks={windowTasks}
+          getBarPositions={getBarPositions}
+          todayCol={todayCol}
+          members={members}
+          onTaskClick={setEditing}
+        />
+        {modal}
       </div>
     );
   }
 
-  // ── month view ────────────────────────────────────────────────────────────────
+  // ── month timeline (X-axis = weeks) ───────────────────────────────────────────
   const [y, m] = anchor.split('-').map(Number);
-  const currentMonthPrefix = `${y}-${String(m).padStart(2, '0')}`;
-  const weeks = Array.from({ length: 6 }, (_, i) => visibleDays.slice(i * 7, i * 7 + 7));
+  const firstDay = `${y}-${String(m).padStart(2, '0')}-01`;
+  const lastDay  = lastOfMonth(anchor);
+
+  // collect weeks that overlap the month
+  const weeks = [];
+  let wk = weekStart(firstDay);
+  while (wk <= lastDay) {
+    weeks.push(wk);
+    wk = addDays(wk, 7);
+  }
+
+  const mWindowStart = weeks[0];
+  const mWindowEnd   = addDays(weeks[weeks.length - 1], 6);
+
+  const windowTasks = tasks.filter(t => {
+    const [s, e] = taskRange(t);
+    return e >= mWindowStart && s <= mWindowEnd;
+  });
+
+  const columns = weeks.map(wMon => {
+    const dt = new Date(wMon + 'T12:00:00');
+    const we = addDays(wMon, 6);
+    return {
+      key: wMon,
+      label: `${MONTH_NAMES[dt.getMonth()].slice(0, 3)} ${dt.getDate()}`,
+      sublabel: null,
+      isToday: today >= wMon && today <= we,
+    };
+  });
+
+  const todayWeekIdx = weeks.findIndex(wMon => today >= wMon && today <= addDays(wMon, 6));
+  const todayCol = todayWeekIdx >= 0 ? todayWeekIdx + 2 : null;
+
+  const getBarPositions = (task) => {
+    const [ts, te] = taskRange(task);
+    if (te < mWindowStart || ts > mWindowEnd) return null;
+    const cs = ts < mWindowStart ? mWindowStart : ts;
+    const ce = te > mWindowEnd   ? mWindowEnd   : te;
+    const c1 = weeks.findIndex(wMon => wMon <= cs && addDays(wMon, 6) >= cs);
+    const c2 = weeks.findIndex(wMon => wMon <= ce && addDays(wMon, 6) >= ce);
+    if (c1 < 0 || c2 < 0) return null;
+    return { colStart: c1 + 2, colEnd: c2 + 2 };
+  };
 
   return (
     <div className="px-6 py-10 pb-32">
       {toolbar}
-      <div className="rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800 overflow-hidden">
-        {/* weekday header */}
-        <div className="grid grid-cols-7 border-b border-slate-100 dark:border-stone-700">
-          {DAY_LABELS.map(d => (
-            <div key={d} className="border-l border-slate-100 dark:border-stone-700 first:border-l-0 px-2 py-2 text-center text-[11px] font-semibold text-slate-400 dark:text-stone-500 uppercase">
-              {d}
-            </div>
-          ))}
-        </div>
-        {/* 6 weeks */}
-        {weeks.map((weekDays, wi) => (
-          <div key={wi} className="grid grid-cols-7 border-b border-slate-100 dark:border-stone-700 last:border-b-0">
-            {weekDays.map(day => {
-              const isToday     = day === today;
-              const inMonth     = day.startsWith(currentMonthPrefix);
-              const dayTasks    = windowTasks.filter(t => isActiveOnDay(t, day));
-              const maxShow     = 3;
-              const overflow    = dayTasks.length - maxShow;
-              return (
-                <div key={day}
-                  className={`border-l border-slate-100 dark:border-stone-700 first:border-l-0 min-h-[96px] p-1.5 flex flex-col gap-0.5
-                    ${isToday ? 'bg-brand-primary/5 dark:bg-brand-primary/10' : !inMonth ? 'bg-slate-50/60 dark:bg-stone-800/60' : ''}`}>
-                  {/* date number */}
-                  <span className={`self-start flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold mb-0.5
-                    ${isToday ? 'bg-brand-primary text-white' : inMonth ? 'text-slate-700 dark:text-stone-200' : 'text-slate-300 dark:text-stone-600'}`}>
-                    {parseInt(day.slice(-2))}
-                  </span>
-                  {dayTasks.slice(0, maxShow).map(task => (
-                    <TaskChip key={task.id} task={task} onClick={() => setEditing(task)} />
-                  ))}
-                  {overflow > 0 && (
-                    <span className="text-[10px] text-slate-400 dark:text-stone-500 pl-1">+{overflow} more</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
-      {editing && (
-        <TaskModal task={editing} members={members} projectName={projectName}
-          onClose={() => setEditing(null)}
-          onSave={saved => { handleSave(saved); setEditing(null); }}
-          onDelete={handleDelete} />
-      )}
+      <GanttGrid
+        columns={columns}
+        windowTasks={windowTasks}
+        getBarPositions={getBarPositions}
+        todayCol={todayCol}
+        members={members}
+        onTaskClick={setEditing}
+      />
+      {modal}
     </div>
   );
 }
