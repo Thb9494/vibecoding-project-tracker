@@ -64,6 +64,8 @@ const SEED_TASKS = [
   },
 ];
 
+// ── localStorage hook ────────────────────────────────────────────────────────
+
 export function useLocalStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
     try {
@@ -85,6 +87,7 @@ export function useLocalStorage(key, initialValue) {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+// Design from Theresa (M6 tag-style): colored left stripe + icon per type
 const TYPE_CONFIG = {
   feature: {
     badge:  'bg-indigo-100 text-indigo-700',
@@ -108,20 +111,226 @@ function initials(name) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 }
 
-// ── TaskCard ─────────────────────────────────────────────────────────────────
+function newId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
 
-function TaskCard({ task }) {
-  const isOverdue = task.dueDate && task.dueDate < new Date().toISOString().slice(0, 10) && task.status !== 'done';
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  type: 'feature',
+  status: 'todo',
+  assignee: TEAM[0],
+  dueDate: '',
+};
+
+// ── TaskModal ────────────────────────────────────────────────────────────────
+
+function TaskModal({ task, onClose, onSave, onDelete }) {
+  const isNew = !task;
+  const [form, setForm] = useState(
+    isNew ? EMPTY_FORM : {
+      title:       task.title,
+      description: task.description,
+      type:        task.type,
+      status:      task.status,
+      assignee:    task.assignee,
+      dueDate:     task.dueDate ?? '',
+    }
+  );
+  const [errors, setErrors] = useState({});
+
+  function set(field, val) {
+    setForm(f => ({ ...f, [field]: val }));
+    setErrors(e => ({ ...e, [field]: undefined }));
+  }
+
+  function validate() {
+    const e = {};
+    if (!form.title.trim()) e.title = 'Title is required';
+    return e;
+  }
+
+  function handleSave() {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    const saved = isNew
+      ? { ...form, id: newId(), createdDate: today(), dueDate: form.dueDate || null }
+      : { ...task, ...form, dueDate: form.dueDate || null };
+    onSave(saved);
+    onClose();
+  }
+
+  function handleDelete() {
+    if (window.confirm('Delete this task?')) {
+      onDelete(task.id);
+      onClose();
+    }
+  }
+
+  function handleBackdrop(e) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={handleBackdrop}
+    >
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
+
+        {/* header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800">
+            {isNew ? '✦ New Task' : 'Edit Task'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* body */}
+        <div className="overflow-y-auto px-6 py-5 flex flex-col gap-5">
+
+          {/* Title */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Title <span className="text-red-400">*</span>
+            </label>
+            <input
+              className={`rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 ${errors.title ? 'border-red-400' : 'border-slate-200'}`}
+              placeholder="What needs to be done?"
+              value={form.title}
+              onChange={e => set('title', e.target.value)}
+            />
+            {errors.title && <span className="text-xs text-red-500">{errors.title}</span>}
+          </div>
+
+          {/* Description */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Description</label>
+            <textarea
+              rows={3}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 resize-none"
+              placeholder="Add more context…"
+              value={form.description}
+              onChange={e => set('description', e.target.value)}
+            />
+          </div>
+
+          {/* Type + Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</label>
+              <select
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                value={form.type}
+                onChange={e => set('type', e.target.value)}
+              >
+                <option value="feature">⚡ Feature</option>
+                <option value="bug">🐛 Bug</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</label>
+              <select
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                value={form.status}
+                onChange={e => set('status', e.target.value)}
+              >
+                {STAGES.map(s => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Assignee + Due Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Assignee</label>
+              <select
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                value={form.assignee}
+                onChange={e => set('assignee', e.target.value)}
+              >
+                {TEAM.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Due Date</label>
+              <input
+                type="date"
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.dueDate}
+                onChange={e => set('dueDate', e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Created date — read-only in edit mode */}
+          {!isNew && (
+            <p className="text-xs text-slate-400">Created: {task.createdDate}</p>
+          )}
+        </div>
+
+        {/* footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
+          {!isNew ? (
+            <button
+              onClick={handleDelete}
+              className="rounded-lg px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 transition"
+            >
+              🗑 Delete
+            </button>
+          ) : <span />}
+
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+            >
+              {isNew ? '+ Add Task' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TaskCard ──────────────────────────────────────────────────────────────────
+
+function TaskCard({ task, onClick }) {
+  const isOverdue = task.dueDate && task.dueDate < today() && task.status !== 'done';
   const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
 
   return (
-    <div className={`rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-2 ${typeConfig.stripe} ${isOverdue ? 'border-red-300' : 'border-slate-200'}`}>
-      {/* type badge + icon */}
-      <div className="flex items-start justify-between gap-2">
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
-          {typeConfig.icon} {task.type}
-        </span>
-      </div>
+    <div
+      onClick={onClick}
+      className={`cursor-pointer rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} ${isOverdue ? 'border-red-300' : 'border-slate-200'}`}
+    >
+      {/* type badge with icon */}
+      <span className={`self-start rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
+        {typeConfig.icon} {task.type}
+      </span>
 
       <p className="text-sm font-semibold text-slate-800 leading-snug">{task.title}</p>
 
@@ -129,9 +338,8 @@ function TaskCard({ task }) {
         <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{task.description}</p>
       )}
 
-      {/* footer: assignee + due date */}
+      {/* footer */}
       <div className="mt-1 flex items-center justify-between">
-        {/* assignee avatar */}
         <div className="flex items-center gap-1.5">
           <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>
             {initials(task.assignee)}
@@ -139,7 +347,6 @@ function TaskCard({ task }) {
           <span className="text-xs text-slate-600">{task.assignee}</span>
         </div>
 
-        {/* due date */}
         {task.dueDate && (
           <span className={`text-xs font-medium ${isOverdue ? 'text-red-500' : 'text-slate-400'}`}>
             {isOverdue ? '⚠ ' : ''}{task.dueDate}
@@ -152,10 +359,9 @@ function TaskCard({ task }) {
 
 // ── Column ────────────────────────────────────────────────────────────────────
 
-function Column({ stage, tasks }) {
+function Column({ stage, tasks, onCardClick }) {
   return (
     <div className="flex flex-col gap-3 min-w-0 flex-1">
-      {/* column header */}
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500">
           {stage.label}
@@ -165,14 +371,15 @@ function Column({ stage, tasks }) {
         </span>
       </div>
 
-      {/* cards */}
       <div className="flex flex-col gap-2">
         {tasks.length === 0 ? (
           <div className="rounded-xl border-2 border-dashed border-slate-200 p-4 text-center text-xs text-slate-400">
             No tasks
           </div>
         ) : (
-          tasks.map(task => <TaskCard key={task.id} task={task} />)
+          tasks.map(task => (
+            <TaskCard key={task.id} task={task} onClick={() => onCardClick(task)} />
+          ))
         )}
       </div>
     </div>
@@ -182,36 +389,68 @@ function Column({ stage, tasks }) {
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [tasks] = useLocalStorage('vibetracker.tasks', SEED_TASKS);
+  const [tasks, setTasks] = useLocalStorage('vibetracker.tasks', SEED_TASKS);
+  const [editing, setEditing] = useState(null);
+  const isModalOpen = editing !== null;
+
+  function openNew()      { setEditing('new'); }
+  function openEdit(task) { setEditing(task); }
+  function closeModal()   { setEditing(null); }
+
+  function handleSave(saved) {
+    setTasks(prev => {
+      const exists = prev.find(t => t.id === saved.id);
+      return exists ? prev.map(t => t.id === saved.id ? saved : t) : [...prev, saved];
+    });
+  }
+
+  function handleDelete(id) {
+    setTasks(prev => prev.filter(t => t.id !== id));
+  }
 
   return (
     <div className="min-h-screen p-6">
-      <header className="mb-8 flex items-end justify-between">
+      <header className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
-            Vibecoding Project Tracker
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900">Vibecoding Project Tracker</h1>
           <p className="text-sm text-slate-500">Team · Theresa · Murtaza · Makram</p>
         </div>
 
-        {/* task count summary */}
-        <div className="flex gap-4 text-sm text-slate-500">
-          <span>{tasks.length} tasks total</span>
-          <span className="text-blue-600 font-medium">{tasks.filter(t => t.type === 'feature').length} features</span>
-          <span className="text-red-500 font-medium">{tasks.filter(t => t.type === 'bug').length} bugs</span>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-4 text-sm text-slate-500">
+            <span>{tasks.length} tasks</span>
+            <span className="text-indigo-600 font-medium">{tasks.filter(t => t.type === 'feature').length} features</span>
+            <span className="text-orange-500 font-medium">{tasks.filter(t => t.type === 'bug').length} bugs</span>
+          </div>
+
+          <button
+            onClick={openNew}
+            className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            <span className="text-lg leading-none">+</span> New Task
+          </button>
         </div>
       </header>
 
-      {/* Kanban board */}
       <main className="grid grid-cols-4 gap-4">
         {STAGES.map(stage => (
           <Column
             key={stage.id}
             stage={stage}
             tasks={tasks.filter(t => t.status === stage.id)}
+            onCardClick={openEdit}
           />
         ))}
       </main>
+
+      {isModalOpen && (
+        <TaskModal
+          task={editing === 'new' ? null : editing}
+          onClose={closeModal}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }
