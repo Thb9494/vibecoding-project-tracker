@@ -331,16 +331,33 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
   );
 }
 
-// ── TaskCard ─────────────────────────────────────────────────────────────────
+// ── Due-tint helper (M8) ─────────────────────────────────────────────────────
+
+function getDueTint(task) {
+  if (task.status === 'done' || !task.dueDate) {
+    return { card: '', label: '', icon: '' };
+  }
+  const t = today();
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  if (task.dueDate < t) {
+    return { card: 'bg-red-50 border-red-300', label: 'text-red-600 font-semibold', icon: '🚨' };
+  }
+  if (task.dueDate <= tomorrow) {
+    return { card: 'bg-amber-50 border-amber-300', label: 'text-amber-600 font-semibold', icon: '⚠️' };
+  }
+  return { card: 'bg-emerald-50 border-emerald-200', label: 'text-emerald-600', icon: '' };
+}
+
+// ── TaskCard ──────────────────────────────────────────────────────────────────
 
 function TaskCard({ task, onClick, onHandoff }) {
-  const isOverdue = task.dueDate && task.dueDate < today() && task.status !== 'done';
   const typeConfig = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
+  const tint = getDueTint(task);
 
   return (
     <div
       onClick={onClick}
-      className={`cursor-pointer rounded-xl border bg-white p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} ${isOverdue ? 'border-red-300' : 'border-slate-200'}`}
+      className={`cursor-pointer rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all ${typeConfig.stripe} ${tint.card || 'bg-white border-slate-200'}`}
     >
       {/* type badge */}
       <span className={`self-start rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${typeConfig.badge}`}>
@@ -374,13 +391,15 @@ function TaskCard({ task, onClick, onHandoff }) {
             <option key={name} value={name}>{name}</option>
           ))}
         </select>
-      </div>
 
-      {task.dueDate && (
-        <span className={`text-xs font-medium ${isOverdue ? 'text-red-500' : 'text-slate-400'}`}>
-          {isOverdue ? '⚠ ' : ''}{task.dueDate}
-        </span>
-      )}
+        {/* due date with tint color (M8) */}
+        {task.dueDate && (
+          <span className={`flex items-center gap-1 text-xs ${tint.label || 'text-slate-400'}`}>
+            {tint.icon && <span>{tint.icon}</span>}
+            {task.dueDate}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
