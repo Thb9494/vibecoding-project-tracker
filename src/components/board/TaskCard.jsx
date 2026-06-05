@@ -48,16 +48,17 @@ export function TaskCard({ task, members, onClick, onHandoff, getIcon, projectNa
         <p className="text-xs text-slate-500 dark:text-stone-400 leading-relaxed line-clamp-2">{task.description}</p>
       )}
 
-      {/* row 4: copy context — always visible, right under description */}
-      <div onClick={e => e.stopPropagation()}>
-        <CopyContextButton task={task} projectName={projectName} stopClick />
-      </div>
-
-      {/* row 5: footer — avatar (with handoff popover) + name */}
+      {/* row 4+5: footer — copy context left, avatar+name right */}
       <div className="mt-1 flex items-center justify-between gap-2">
 
-        {/* avatar + name — clicking avatar opens handoff popover */}
+        {/* left: copy context */}
+        <div onClick={e => e.stopPropagation()}>
+          <CopyContextButton task={task} projectName={projectName} stopClick />
+        </div>
+
+        {/* right: avatar (with handoff popover) + name */}
         <div className="relative flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+          <span className="text-xs font-medium text-slate-400 dark:text-stone-500">{task.assignee}</span>
           <button
             onClick={() => setShowHandoff(v => !v)}
             title="Hand off to a teammate"
@@ -67,12 +68,10 @@ export function TaskCard({ task, members, onClick, onHandoff, getIcon, projectNa
               ? <img src={icon} alt={task.assignee} className="h-7 w-7 rounded-full object-cover object-top" />
               : <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white ${avatarColor}`}>{initials(task.assignee)}</span>
             }
-            {/* small arrow hint */}
             <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-[8px] leading-none border border-slate-200 dark:border-stone-600">
               ↕
             </span>
           </button>
-          <span className="text-xs font-medium text-slate-400 dark:text-stone-500">{task.assignee}</span>
 
           {/* handoff popover */}
           {showHandoff && teammates.length > 0 && (
