@@ -71,7 +71,7 @@ export function NewProjectModal({ onClose, onCreate }) {
               placeholder="z.B. GraceBayGarage" value={name} onChange={e => setName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCreate()} />
             <button onClick={handleCreate} disabled={!name.trim() || members.length === 0}
-              className="w-full rounded-lg bg-blue-700 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-40 transition">
+              className="w-full rounded-lg bg-brand-primary py-2.5 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-40 transition">
               + Projekt erstellen
             </button>
           </div>

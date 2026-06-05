@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { NewProjectModal } from './NewProjectModal';
 import { initials } from '../../utils/ids';
 import { INPUT_BASE, PROJECT_COLORS } from '../../constants';
 
@@ -75,10 +74,9 @@ function EditProjectPopover({ project, onSave, onClose }) {
 
 // ── ProjectSwitcher ───────────────────────────────────────────────────────────
 
-export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate, onUpdate }) {
-  const [open, setOpen]         = useState(false);
-  const [showNew, setShowNew]   = useState(false);
-  const [editing, setEditing]   = useState(null); // project being edited
+export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate, onUpdate, onShowNewProject }) {
+  const [open, setOpen]       = useState(false);
+  const [editing, setEditing] = useState(null);
 
   const active = projects.find(p => p.id === activeProjectId);
 
@@ -122,7 +120,7 @@ export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate,
                       {p.initials || initials(p.name).slice(0, 2)}
                     </span>
                     <span className="truncate">{p.name}</span>
-                    {p.id === activeProjectId && <span className="ml-auto text-blue-400 shrink-0">✓</span>}
+                    {p.id === activeProjectId && <span className="ml-auto text-brand-ring shrink-0">✓</span>}
                   </button>
 
                   {/* edit button — appears on hover */}
@@ -138,7 +136,7 @@ export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate,
 
               <div className="border-t border-stone-700 mt-1 pt-1">
                 <button
-                  onClick={() => { setOpen(false); setShowNew(true); }}
+                  onClick={() => { setOpen(false); onShowNewProject?.(); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-stone-400 hover:bg-stone-800 transition-colors"
                 >
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-dashed border-stone-600 text-stone-400 text-lg leading-none">+</span>
@@ -149,10 +147,6 @@ export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate,
           </>
         )}
       </div>
-
-      {showNew && (
-        <NewProjectModal onClose={() => setShowNew(false)} onCreate={handleCreate} />
-      )}
 
       {editing && (
         <EditProjectPopover
