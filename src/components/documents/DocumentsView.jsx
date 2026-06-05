@@ -49,7 +49,7 @@ function DocumentModal({ onClose, onSave }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-stone-900 shadow-2xl p-6 flex flex-col gap-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-surface-page-dark shadow-2xl p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-800 dark:text-stone-100">Add Document</h2>
           <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-stone-800 transition">✕</button>
@@ -111,7 +111,7 @@ function DocumentModal({ onClose, onSave }) {
 function DocCard({ doc, onDelete }) {
   const isImage = doc.body?.startsWith('data:image/');
   return (
-    <div className="rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800 p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-surface-card-dark p-4 flex flex-col gap-3">
       {doc.type === 'file' && isImage && (
         <img src={doc.body} alt={doc.title} className="w-full h-32 object-cover rounded-lg" />
       )}

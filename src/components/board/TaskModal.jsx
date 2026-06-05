@@ -42,7 +42,7 @@ export function TaskModal({ task, members, projectName, onClose, onSave, onDelet
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-stone-900 shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-surface-page-dark shadow-2xl flex flex-col max-h-[90vh]">
 
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-stone-700">
           <h2 className="text-lg font-bold text-slate-800 dark:text-stone-100">{isNew ? '✦ New Task' : 'Edit Task'}</h2>

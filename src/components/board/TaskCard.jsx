@@ -17,7 +17,7 @@ export function TaskCard({ task, members, onClick, onHandoff, getIcon, projectNa
       onClick={onClick}
       className={`cursor-grab active:cursor-grabbing rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all select-none
         ${typeConfig.stripe}
-        bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700
+        bg-white dark:bg-surface-card-dark border-slate-200 dark:border-stone-700
         ${isDragging ? 'opacity-40 scale-95 rotate-1' : ''}`}
     >
       <div className="flex items-center justify-between gap-2">

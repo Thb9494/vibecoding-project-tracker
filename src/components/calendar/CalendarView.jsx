@@ -50,13 +50,13 @@ export function CalendarView({ project, onUpdateProject }) {
     <div className="px-6 py-10 pb-32">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-stone-100 mb-8">Calendar</h1>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-surface-card-dark">
         <div
           className="min-w-max"
           style={{ display: 'grid', gridTemplateColumns: `140px repeat(${dayCount}, minmax(72px, 1fr))` }}
         >
           {/* header row */}
-          <div className="sticky left-0 z-10 bg-white dark:bg-stone-800 border-b border-r border-slate-200 dark:border-stone-700 px-3 py-2 text-xs font-semibold text-slate-400 dark:text-stone-500 uppercase tracking-wide">
+          <div className="sticky left-0 z-10 bg-white dark:bg-surface-card-dark border-b border-r border-slate-200 dark:border-stone-700 px-3 py-2 text-xs font-semibold text-slate-400 dark:text-stone-500 uppercase tracking-wide">
             Status
           </div>
           {days.map((d, i) => {
@@ -77,7 +77,7 @@ export function CalendarView({ project, onUpdateProject }) {
             return (
               <div key={stage.id} className="contents">
                 {/* stage label cell */}
-                <div className="sticky left-0 z-10 bg-white dark:bg-stone-800 border-b border-r border-slate-100 dark:border-stone-700 px-3 py-3 flex items-center">
+                <div className="sticky left-0 z-10 bg-white dark:bg-surface-card-dark border-b border-r border-slate-100 dark:border-stone-700 px-3 py-3 flex items-center">
                   <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-stone-400">{stage.label}</span>
                 </div>
                 {/* day cells */}
@@ -118,7 +118,7 @@ export function CalendarView({ project, onUpdateProject }) {
               const tc = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
               return (
                 <button key={task.id} onClick={() => setEditing(task)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:shadow-sm ${tc.stripe} bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200`}>
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:shadow-sm ${tc.stripe} bg-white dark:bg-surface-card-dark border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200`}>
                   {tc.icon} {task.title}
                 </button>
               );

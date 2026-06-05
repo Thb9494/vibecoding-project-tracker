@@ -42,7 +42,7 @@ export function SettingsView({ project, onUpdateProject, onDeleteProject, theme,
       {/* Appearance */}
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold text-slate-500 dark:text-stone-400 uppercase tracking-wide">Appearance</h2>
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800 px-4 py-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-surface-card-dark px-4 py-3">
           <span className="text-sm font-medium text-slate-700 dark:text-stone-200">Theme</span>
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
         </div>
@@ -51,7 +51,7 @@ export function SettingsView({ project, onUpdateProject, onDeleteProject, theme,
       {/* Team Members */}
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold text-slate-500 dark:text-stone-400 uppercase tracking-wide">Team Members</h2>
-        <div className="rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-stone-800 overflow-hidden divide-y divide-slate-100 dark:divide-stone-700">
+        <div className="rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-surface-card-dark overflow-hidden divide-y divide-slate-100 dark:divide-stone-700">
           {members.map((m, i) => {
             const icon = icons[m.name] ?? null;
             const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
@@ -97,7 +97,7 @@ export function SettingsView({ project, onUpdateProject, onDeleteProject, theme,
       {/* Danger Zone */}
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold text-red-400 uppercase tracking-wide">Danger Zone</h2>
-        <div className="rounded-xl border border-red-200 dark:border-red-900 bg-white dark:bg-stone-800 px-4 py-3 flex items-center justify-between">
+        <div className="rounded-xl border border-red-200 dark:border-red-900 bg-white dark:bg-surface-card-dark px-4 py-3 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-800 dark:text-stone-100">Delete project</p>
             <p className="text-xs text-slate-500 dark:text-stone-400">Permanently removes all tasks and documents.</p>
