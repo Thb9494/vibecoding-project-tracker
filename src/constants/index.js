@@ -26,13 +26,13 @@ export const INPUT_BASE =
 
 export const TYPE_CONFIG = {
   feature: {
-    badge:  'bg-feature/10 text-feature dark:bg-feature/20 dark:text-feature-soft',
-    stripe: 'border-l-4 border-l-feature',
+    badge:  'bg-indigo-500/10 text-indigo-400 dark:bg-indigo-500/20 dark:text-indigo-300',
+    stripe: 'border-l-4 border-l-indigo-500',
     icon:   '⚡',
   },
   bug: {
-    badge:  'bg-bug/10 text-bug dark:bg-bug/20 dark:text-bug-soft',
-    stripe: 'border-l-4 border-l-bug',
+    badge:  'bg-orange-500/10 text-orange-400 dark:bg-orange-500/20 dark:text-orange-300',
+    stripe: 'border-l-4 border-l-orange-500',
     icon:   '🐛',
   },
 };

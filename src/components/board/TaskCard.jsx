@@ -42,21 +42,22 @@ export function TaskCard({ task, members, onClick, onHandoff, getIcon, projectNa
           <span className="text-xs font-medium text-slate-400 dark:text-stone-500">{task.assignee}</span>
         </div>
 
-        {/* hand-off dropdown with 👉 icon */}
+        {/* hand-off dropdown */}
         <div className="relative" onClick={e => e.stopPropagation()}>
           <select
             value=""
             onChange={e => { if (e.target.value) onHandoff(task, e.target.value); }}
-            className="appearance-none pl-6 pr-2 py-1 text-xs font-medium rounded-lg cursor-pointer transition-all focus:outline-none
-              border border-slate-300 bg-white text-slate-700 hover:border-blue-500 hover:text-blue-700 hover:bg-blue-50
-              dark:border-stone-600 dark:bg-stone-700 dark:text-stone-300 dark:hover:border-blue-400 dark:hover:text-blue-300 dark:[color-scheme:dark]"
+            className="appearance-none pl-2 pr-7 py-1 text-xs font-medium rounded-lg cursor-pointer transition-all focus:outline-none
+              border border-zinc-600 bg-transparent text-zinc-400
+              hover:border-zinc-400 hover:text-zinc-200
+              dark:[color-scheme:dark]"
           >
-            <option value="" disabled>Hand off</option>
+            <option value="" disabled>hand off to</option>
             {members.filter(m => m.name !== task.assignee).map(m => (
               <option key={m.id} value={m.name}>{m.name}</option>
             ))}
           </select>
-          <span className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-sm leading-none">👉</span>
+          <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-sm leading-none">👉</span>
         </div>
       </div>
 
