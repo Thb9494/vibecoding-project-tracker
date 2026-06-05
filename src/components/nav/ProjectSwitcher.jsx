@@ -1,23 +1,85 @@
 import { useState } from 'react';
 import { NewProjectModal } from './NewProjectModal';
 import { initials } from '../../utils/ids';
+import { INPUT_BASE, PROJECT_COLORS } from '../../constants';
 
-export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate }) {
-  const [open, setOpen] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+// ── inline edit popover ───────────────────────────────────────────────────────
+
+function EditProjectPopover({ project, onSave, onClose }) {
+  const [name, setName]   = useState(project.name);
+  const [color, setColor] = useState(project.color);
+  const [badge, setBadge] = useState(project.initials ?? '');
+
+  function handleSave() {
+    if (!name.trim()) return;
+    onSave({ ...project, name: name.trim(), color, initials: badge || initials(name).slice(0, 2) });
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-72 rounded-2xl bg-zinc-900 border border-stone-600 shadow-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-stone-100">Projekt bearbeiten</h3>
+          <button onClick={onClose} className="text-stone-500 hover:text-stone-200 transition">✕</button>
+        </div>
+
+        {/* preview */}
+        <div className="flex justify-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white shadow"
+            style={{ backgroundColor: color }}>
+            {badge || initials(name).slice(0, 2) || '?'}
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Name</label>
+          <input className={`px-3 py-2 text-sm ${INPUT_BASE}`} value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSave()} />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Farbe</label>
+          <div className="flex flex-wrap gap-2">
+            {PROJECT_COLORS.map(c => (
+              <button key={c} onClick={() => setColor(c)}
+                className={`h-6 w-6 rounded-full transition-transform hover:scale-110 ${color === c ? 'ring-2 ring-offset-2 ring-offset-zinc-900 ring-white scale-110' : ''}`}
+                style={{ backgroundColor: c }} />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Kürzel <span className="font-normal normal-case text-stone-500">· max. 2</span></label>
+          <input className={`px-3 py-2 text-sm ${INPUT_BASE}`} maxLength={2}
+            placeholder={initials(name).slice(0, 2)}
+            value={badge} onChange={e => setBadge(e.target.value.toUpperCase().slice(0, 2))} />
+        </div>
+
+        <div className="flex gap-2 justify-end pt-1">
+          <button onClick={onClose} className="rounded-lg border border-stone-600 px-3 py-1.5 text-xs font-semibold text-stone-300 hover:bg-stone-800 transition">Abbrechen</button>
+          <button onClick={handleSave} disabled={!name.trim()}
+            className="rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-40 transition">Speichern</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ProjectSwitcher ───────────────────────────────────────────────────────────
+
+export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate, onUpdate }) {
+  const [open, setOpen]         = useState(false);
+  const [showNew, setShowNew]   = useState(false);
+  const [editing, setEditing]   = useState(null); // project being edited
 
   const active = projects.find(p => p.id === activeProjectId);
 
-  function handleSelect(id) {
-    setOpen(false);
-    onSelect(id);
-  }
+  function handleSelect(id) { setOpen(false); onSelect(id); }
 
-  function handleCreate(project) {
-    onCreate(project);
-    setOpen(false);
-    onSelect(project.id);
-  }
+  function handleCreate(project) { onCreate(project); setOpen(false); onSelect(project.id); }
 
   return (
     <>
@@ -35,32 +97,46 @@ export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate 
         {/* popover */}
         {open && (
           <>
+            {/* backdrop — closes on click outside */}
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-            <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-40 w-56 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-white/30 dark:border-stone-700/50 shadow-xl py-2">
+
+            <div className="absolute bottom-full mb-3 left-0 z-40 w-64 rounded-2xl bg-zinc-900/95 backdrop-blur-md border border-stone-700 shadow-xl py-2">
               {projects.length === 0 && (
-                <p className="px-4 py-2 text-xs text-slate-400 dark:text-stone-500">No projects yet</p>
+                <p className="px-4 py-2 text-xs text-stone-500">Noch keine Projekte</p>
               )}
+
               {projects.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => handleSelect(p.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-stone-800
-                    ${p.id === activeProjectId ? 'font-semibold text-slate-900 dark:text-stone-100' : 'text-slate-600 dark:text-stone-300'}`}
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
-                    style={{ backgroundColor: p.color }}>
-                    {p.initials || initials(p.name).slice(0, 2)}
-                  </span>
-                  <span className="truncate flex-1">{p.name}</span>
-                  {p.id === activeProjectId && <span className="text-brand-primary">✓</span>}
-                </button>
+                <div key={p.id} className="flex items-center group">
+                  <button
+                    onClick={() => handleSelect(p.id)}
+                    className={`flex-1 flex items-center gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-stone-800 text-left
+                      ${p.id === activeProjectId ? 'font-semibold text-stone-100' : 'text-stone-300'}`}
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+                      style={{ backgroundColor: p.color }}>
+                      {p.initials || initials(p.name).slice(0, 2)}
+                    </span>
+                    <span className="truncate">{p.name}</span>
+                    {p.id === activeProjectId && <span className="ml-auto text-blue-400 shrink-0">✓</span>}
+                  </button>
+
+                  {/* edit button — appears on hover */}
+                  <button
+                    onClick={e => { e.stopPropagation(); setOpen(false); setEditing(p); }}
+                    className="opacity-0 group-hover:opacity-100 pr-3 text-stone-500 hover:text-stone-200 transition text-xs"
+                    title="Bearbeiten"
+                  >
+                    ✏️
+                  </button>
+                </div>
               ))}
-              <div className="border-t border-slate-100 dark:border-stone-700 mt-1 pt-1">
+
+              <div className="border-t border-stone-700 mt-1 pt-1">
                 <button
-                  onClick={() => { setOpen(false); setShowModal(true); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-500 dark:text-stone-400 hover:bg-slate-50 dark:hover:bg-stone-800 transition-colors"
+                  onClick={() => { setOpen(false); setShowNew(true); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-stone-400 hover:bg-stone-800 transition-colors"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-dashed border-slate-300 dark:border-stone-600 text-slate-400 text-lg leading-none">+</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg border-2 border-dashed border-stone-600 text-stone-400 text-lg leading-none">+</span>
                   New project
                 </button>
               </div>
@@ -69,10 +145,15 @@ export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate 
         )}
       </div>
 
-      {showModal && (
-        <NewProjectModal
-          onClose={() => setShowModal(false)}
-          onCreate={handleCreate}
+      {showNew && (
+        <NewProjectModal onClose={() => setShowNew(false)} onCreate={handleCreate} />
+      )}
+
+      {editing && (
+        <EditProjectPopover
+          project={editing}
+          onSave={p => onUpdate?.(p)}
+          onClose={() => setEditing(null)}
         />
       )}
     </>

@@ -139,6 +139,7 @@ export default function App() {
         onSelectProject={handleSelectProject}
         onSelectView={setActiveView}
         onCreate={handleCreate}
+        onUpdate={updateProject}
       />
 
       {/* global toast — appears above the nav bar */}
