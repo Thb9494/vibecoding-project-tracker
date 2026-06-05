@@ -4,13 +4,10 @@ import { newId, initials } from '../../utils/ids';
 import { Column } from './Column';
 import { TaskModal } from './TaskModal';
 import { GhibliPicker } from '../shared/GhibliPicker';
-import { useTheme } from '../../hooks/useTheme';
-import { ThemeToggle } from '../shared/ThemeToggle';
 
 export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }) {
   const [editing, setEditing] = useState(null);
   const [pickerFor, setPickerFor] = useState(null);
-  const [theme, toggleTheme] = useTheme();
 
   const { tasks = [], members = [], name: projectName } = project;
 
@@ -73,7 +70,6 @@ export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }
           >
             <span className="text-lg leading-none">+</span> New Task
           </button>
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
       </header>
 
