@@ -1,10 +1,11 @@
 import { ProjectSwitcher } from './ProjectSwitcher';
 
 const VIEWS = [
-  { id: 'board',     icon: '▦',  label: 'Board' },
-  { id: 'documents', icon: '📄', label: 'Docs' },
-  { id: 'calendar',  icon: '📅', label: 'Calendar' },
-  { id: 'settings',  icon: '⚙️', label: 'Settings' },
+  { id: 'board',        icon: '▦',  label: 'Board' },
+  { id: 'deliverables', icon: '📌', label: 'Deliverables' },
+  { id: 'documents',    icon: '📄', label: 'Docs' },
+  { id: 'calendar',     icon: '📅', label: 'Calendar' },
+  { id: 'settings',     icon: '⚙️', label: 'Settings' },
 ];
 
 export function BottomNav({ projects, activeProjectId, activeView, onSelectProject, onSelectView, onCreate }) {

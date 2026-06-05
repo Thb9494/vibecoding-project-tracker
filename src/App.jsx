@@ -8,6 +8,7 @@ import { NewProjectModal } from './components/nav/NewProjectModal';
 import { BoardView } from './components/board/BoardView';
 import { DocumentsView } from './components/documents/DocumentsView';
 import { CalendarView } from './components/calendar/CalendarView';
+import { DeliverablesView } from './components/deliverables/DeliverablesView';
 import { SettingsView } from './components/settings/SettingsView';
 import { Toast } from './components/shared/Toast';
 
@@ -106,6 +107,11 @@ export default function App() {
           setIcons={setIcons}
           onUpdateProject={updateProject}
           onToast={setToast}
+        />
+      ) : activeView === 'deliverables' ? (
+        <DeliverablesView
+          project={activeProject}
+          onUpdateProject={updateProject}
         />
       ) : activeView === 'documents' ? (
         <DocumentsView

@@ -14,6 +14,7 @@ export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }
 
   const { tasks = [], members = [], name: projectName } = project;
 
+
   function getIcon(name) { return icons[name] ?? null; }
 
   function handleSave(saved) {
