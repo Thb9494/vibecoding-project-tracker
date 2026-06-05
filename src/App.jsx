@@ -696,7 +696,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
               ? <img src={icon} alt={task.assignee} className="h-7 w-7 rounded-full object-cover object-top ring-2 ring-white dark:ring-stone-800 shrink-0" />
               : <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ring-2 ring-white dark:ring-stone-800 ${AVATAR_COLORS[task.assignee] ?? 'bg-slate-400'}`}>{initials(task.assignee)}</span>;
           })()}
-          <span className="text-xs font-semibold text-slate-800 dark:text-stone-200">{task.assignee}</span>
+          <span className="text-xs font-bold text-slate-900 dark:text-stone-100">{task.assignee}</span>
         </div>
 
         {/* hand-off dropdown */}
@@ -713,9 +713,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
-          <span className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-stone-400">
-            <IconHandPoint />
-          </span>
+          <span className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-sm leading-none">👉</span>
         </div>
       </div>
 
@@ -861,7 +859,7 @@ export default function App() {
                       : <span className={`flex h-full w-full items-center justify-center text-xs font-bold text-white ${AVATAR_COLORS[name]}`}>{initials(name)}</span>
                     }
                   </button>
-                  <span className="text-xs font-medium text-slate-800 dark:text-stone-200">{name}</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-stone-100">{name}</span>
                   <span className="text-xs font-semibold text-slate-500 dark:text-stone-500">({count})</span>
                 </div>
               );
