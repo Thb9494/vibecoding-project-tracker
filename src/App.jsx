@@ -247,7 +247,7 @@ const CONTEXT_TEMPLATE = `## Background
 
 // shared input styling (light + dark)
 const INPUT_BASE =
-  'rounded-lg border border-slate-200 dark:border-stone-600 bg-white dark:bg-stone-800 ' +
+  'rounded-lg border border-slate-200 dark:border-stone-600 bg-white dark:bg-surface-card-dark ' +
   'text-slate-800 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-500 ' +
   'outline-none focus:ring-2 focus:ring-brand-ring';
 
@@ -360,7 +360,7 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={handleBackdrop}
     >
-      <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-stone-900 shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-lg rounded-2xl bg-surface-card dark:bg-surface-card-dark shadow-2xl flex flex-col max-h-[90vh]">
 
         {/* header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-stone-700">
@@ -664,7 +664,7 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
       onClick={onClick}
       className={`cursor-grab active:cursor-grabbing rounded-xl border p-3 shadow-sm flex flex-col gap-2 hover:shadow-md hover:-translate-y-0.5 transition-all select-none
         ${typeConfig.stripe}
-        ${'bg-white dark:bg-stone-800 border-slate-200 dark:border-stone-700'}
+        ${'bg-surface-card dark:bg-surface-card-dark border-slate-200 dark:border-white/10'}
         ${isDragging ? 'opacity-40 scale-95 rotate-1' : ''}`}
     >
       {/* top row: type badge + due-date progress tag */}
@@ -824,7 +824,7 @@ export default function App() {
   }, [setTasks]);
 
   return (
-    <div className="min-h-screen p-6 bg-surface-page dark:bg-stone-900 transition-colors">
+    <div className="min-h-screen p-6 bg-surface-page dark:bg-surface-page-dark transition-colors">
       <header className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-stone-100">Vibecoding Project Tracker</h1>

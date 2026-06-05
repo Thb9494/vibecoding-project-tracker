@@ -17,9 +17,12 @@ export default {
           ring:    '#7FA05E', // focus rings
         },
 
-        // Surface — warm, paper-like page background
+        // Surface — from DESIGN.md Precision Minimalist palette
         surface: {
-          page: '#f7f4ed', // light: brighter warm off-white
+          page:      '#faf9fe', // light page background
+          card:      '#ffffff', // light card background
+          'page-dark': '#1a1b1f', // dark page background (on-surface)
+          'card-dark': '#2f3034', // dark card background (inverse-surface)
         },
 
         // Type / tag (M6) — cool indigo vs warm orange
