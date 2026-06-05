@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { INPUT_BASE, AVATAR_COLORS } from '../../constants';
 import { newId, initials } from '../../utils/ids';
-import { ThemeToggle } from '../shared/ThemeToggle';
 import { GhibliPicker } from '../shared/GhibliPicker';
 
-export function SettingsView({ project, onUpdateProject, onDeleteProject, theme, onToggleTheme, icons, setIcons }) {
+export function SettingsView({ project, onUpdateProject, onDeleteProject, icons, setIcons }) {
   const [pickerFor, setPickerFor] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
@@ -38,15 +37,6 @@ export function SettingsView({ project, onUpdateProject, onDeleteProject, theme,
   return (
     <div className="max-w-xl mx-auto px-6 py-10 pb-32 flex flex-col gap-10">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-stone-100">Settings</h1>
-
-      {/* Appearance */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold text-slate-500 dark:text-stone-400 uppercase tracking-wide">Appearance</h2>
-        <div className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-stone-700 bg-white dark:bg-zinc-800 px-4 py-3">
-          <span className="text-sm font-medium text-slate-700 dark:text-stone-200">Theme</span>
-          <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-        </div>
-      </section>
 
       {/* Team Members */}
       <section className="flex flex-col gap-3">

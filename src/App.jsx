@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProjects } from './hooks/useProjects';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { useTheme } from './hooks/useTheme';
 import { migrateOnce } from './utils/migrate';
 import { BottomNav } from './components/nav/BottomNav';
 import { NewProjectModal } from './components/nav/NewProjectModal';
@@ -18,7 +17,6 @@ migrateOnce();
 export default function App() {
   const { projects, updateProject, createProject, deleteProject } = useProjects();
   const [icons, setIcons] = useLocalStorage('vibetracker.icons', {});
-  const [theme, toggleTheme] = useTheme();
   const [toast, setToast] = useState(null);
 
   // ── routing ──────────────────────────────────────────────────────────────────
@@ -128,8 +126,6 @@ export default function App() {
           project={activeProject}
           onUpdateProject={updateProject}
           onDeleteProject={handleDeleteProject}
-          theme={theme}
-          onToggleTheme={toggleTheme}
           icons={icons}
           setIcons={setIcons}
         />
