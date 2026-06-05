@@ -26,12 +26,12 @@ export const INPUT_BASE =
 
 export const TYPE_CONFIG = {
   feature: {
-    badge:  'bg-indigo-500/10 text-indigo-400 dark:bg-indigo-500/20 dark:text-indigo-300',
+    badge:  'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/30 dark:text-indigo-200',
     stripe: 'border-l-4 border-l-indigo-500',
     icon:   '⚡',
   },
   bug: {
-    badge:  'bg-orange-500/10 text-orange-400 dark:bg-orange-500/20 dark:text-orange-300',
+    badge:  'bg-orange-100 text-orange-800 dark:bg-orange-500/30 dark:text-orange-200',
     stripe: 'border-l-4 border-l-orange-500',
     icon:   '🐛',
   },
