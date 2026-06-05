@@ -84,7 +84,7 @@ function DocumentModal({ onClose, onSave, folders }) {
           {['link','file','note'].map(t => (
             <button key={t} onClick={() => setType(t)}
               className={`flex-1 rounded-lg py-1.5 text-xs font-semibold capitalize transition
-                ${type === t ? 'bg-blue-700 text-white' : 'border border-slate-200 dark:border-stone-600 text-slate-500 dark:text-stone-400 hover:bg-slate-50 dark:hover:bg-stone-800'}`}>
+                ${type === t ? 'bg-brand-primary text-white' : 'border border-stone-600 text-stone-400 hover:bg-stone-800'}`}>
               {t === 'link' ? '🔗 Link' : t === 'file' ? '📎 File' : '📝 Note'}
             </button>
           ))}
@@ -104,7 +104,7 @@ function DocumentModal({ onClose, onSave, folders }) {
         {type === 'file' && (
           <div className="flex flex-col gap-2">
             <label className={L}>Datei</label>
-            <input type="file" className="text-sm text-slate-600 dark:text-stone-300 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-700 file:text-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:cursor-pointer hover:file:bg-blue-800 transition" onChange={handleFile} />
+            <input type="file" className="text-sm text-slate-600 dark:text-stone-300 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-primary file:text-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:cursor-pointer hover:file:bg-brand-dark transition" onChange={handleFile} />
             {warn && <p className="text-xs text-amber-500">{warn}</p>}
           </div>
         )}
@@ -133,7 +133,7 @@ function DocumentModal({ onClose, onSave, folders }) {
         <div className="flex gap-2 justify-end">
           <button onClick={onClose} className="rounded-lg border border-slate-200 dark:border-stone-600 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-stone-300 hover:bg-slate-50 dark:hover:bg-stone-800 transition">Abbrechen</button>
           <button onClick={handleSave} disabled={!title.trim()}
-            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-40 transition">Speichern</button>
+            className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-40 transition">Speichern</button>
         </div>
       </div>
     </div>
@@ -181,13 +181,13 @@ function DocCard({ doc, onDelete, folders, onMove }) {
       <div className="flex items-center gap-2 mt-auto flex-wrap">
         {doc.type === 'link' && doc.url && (
           <a href={doc.url} target="_blank" rel="noreferrer"
-            className="rounded-lg bg-blue-700 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-800 transition">
+            className="rounded-lg bg-brand-primary px-3 py-1 text-xs font-semibold text-white hover:bg-brand-dark transition">
             Öffnen →
           </a>
         )}
         {doc.type === 'file' && doc.body && !isImage && (
           <a href={doc.body} download={doc.filename ?? doc.title}
-            className="rounded-lg bg-blue-700 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-800 transition">
+            className="rounded-lg bg-brand-primary px-3 py-1 text-xs font-semibold text-white hover:bg-brand-dark transition">
             Download
           </a>
         )}
@@ -281,7 +281,7 @@ export function DocumentsView({ project, onUpdateProject }) {
   return (
     <div
       className={`px-6 py-10 pb-32 max-w-5xl mx-auto min-h-screen transition-all
-        ${isDragOver ? 'ring-2 ring-inset ring-blue-500 bg-blue-950/20' : ''}`}
+        ${isDragOver ? 'ring-2 ring-inset ring-brand-ring bg-brand-primary/10' : ''}`}
       onDragEnter={e => { e.preventDefault(); dragCounter.current++; setIsDragOver(true); }}
       onDragOver={e => e.preventDefault()}
       onDragLeave={() => { dragCounter.current--; if (dragCounter.current === 0) setIsDragOver(false); }}
@@ -296,7 +296,7 @@ export function DocumentsView({ project, onUpdateProject }) {
             📁 Ordner
           </button>
           <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-800 transition">
+            className="flex items-center gap-1.5 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow hover:bg-brand-dark transition">
             + Add
           </button>
         </div>
@@ -305,7 +305,7 @@ export function DocumentsView({ project, onUpdateProject }) {
       {/* drop hint */}
       {isDragOver && (
         <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center">
-          <div className="rounded-2xl bg-blue-900/80 border-2 border-blue-400 px-10 py-6 text-blue-200 text-lg font-semibold backdrop-blur-sm">
+          <div className="rounded-2xl bg-brand-primary/10 border-2 border-brand-ring px-10 py-6 text-brand-ring text-lg font-semibold backdrop-blur-sm">
             📂 Datei hier ablegen
           </div>
         </div>
@@ -322,7 +322,7 @@ export function DocumentsView({ project, onUpdateProject }) {
             onChange={e => setFolderName(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') createFolder(); if (e.key === 'Escape') setNewFolder(false); }}
           />
-          <button onClick={createFolder} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition">Erstellen</button>
+          <button onClick={createFolder} className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark transition">Erstellen</button>
           <button onClick={() => setNewFolder(false)} className="rounded-lg border border-stone-600 px-3 py-2 text-sm text-stone-400 hover:bg-stone-800 transition">✕</button>
         </div>
       )}

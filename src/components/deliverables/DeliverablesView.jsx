@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { INPUT_BASE } from '../../constants';
 
 const ANCHORS = [
   { id: 'presentation',  label: 'Presentation', icon: '🎤', description: 'Slide deck or pitch link' },
@@ -26,7 +27,7 @@ function AnchorCard({ anchor, onChange }) {
   return (
     <div className={`rounded-2xl border p-5 flex flex-col gap-3 transition-all shadow-sm
       ${filled
-        ? 'bg-white dark:bg-stone-800 border-blue-200 dark:border-blue-700'
+        ? 'bg-stone-800 border-brand-primary/30'
         : 'bg-slate-50 dark:bg-stone-900 border-slate-200 dark:border-stone-700'
       }`}
     >
@@ -49,7 +50,7 @@ function AnchorCard({ anchor, onChange }) {
         <div className="flex gap-2">
           <input
             autoFocus
-            className="flex-1 rounded-lg border border-blue-300 dark:border-blue-600 bg-white dark:bg-stone-800 px-3 py-2 text-sm text-slate-800 dark:text-stone-100 outline-none focus:ring-2 focus:ring-blue-400 placeholder-slate-400"
+            className={`flex-1 px-3 py-2 text-sm ${INPUT_BASE}`}
             placeholder="https://..."
             value={draft}
             onChange={e => setDraft(e.target.value)}
@@ -58,7 +59,7 @@ function AnchorCard({ anchor, onChange }) {
           />
           <button
             onMouseDown={commit}
-            className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
+            className="rounded-lg bg-brand-primary px-3 py-2 text-sm font-semibold text-white hover:bg-brand-dark transition"
           >
             Save
           </button>
@@ -69,7 +70,7 @@ function AnchorCard({ anchor, onChange }) {
             href={anchor.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 truncate text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            className="flex-1 truncate text-sm text-brand-ring hover:underline"
           >
             {anchor.url}
           </a>
@@ -89,7 +90,7 @@ function AnchorCard({ anchor, onChange }) {
       ) : (
         <button
           onClick={() => setEditing(true)}
-          className="self-start rounded-xl border border-dashed border-slate-300 dark:border-stone-600 px-4 py-2 text-sm text-slate-400 dark:text-stone-500 hover:border-blue-400 hover:text-blue-500 dark:hover:border-blue-500 dark:hover:text-blue-400 transition"
+          className="self-start rounded-xl border border-dashed border-stone-600 px-4 py-2 text-sm text-stone-500 hover:border-brand-ring hover:text-brand-ring transition"
         >
           + Add link
         </button>

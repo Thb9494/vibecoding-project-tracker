@@ -10,11 +10,11 @@ export default {
         // never read as the same colour. `DEFAULT` = light mode (solid fills
         // and text); `soft` = lighter shade for legible text on dark surfaces.
 
-        // Brand — DESIGN.md "San Francisco" blue
+        // Brand — teal-green primary action color
         brand: {
-          primary: '#0058bc',
-          dark:    '#004493', // hover
-          ring:    '#4c4aca', // focus rings (secondary/indigo)
+          primary: '#408A71', // all primary action buttons
+          dark:    '#336e5a', // hover/pressed
+          ring:    '#52b090', // focus border accent (lighter)
         },
 
         // Surface — from DESIGN.md Precision Minimalist palette

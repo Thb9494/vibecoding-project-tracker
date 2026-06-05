@@ -18,7 +18,7 @@ export function CopyContextButton({ task, projectName, stopClick = false }) {
       className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-semibold transition-all
         ${copied
           ? 'border-emerald-500 bg-emerald-500 text-white dark:bg-emerald-600 dark:border-emerald-500'
-          : 'border-blue-700 bg-blue-700 text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700'
+          : 'border-brand-primary bg-brand-primary text-white hover:bg-brand-dark'
         }`}
       title="Copy as prompt context"
     >

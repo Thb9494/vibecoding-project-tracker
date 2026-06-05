@@ -20,9 +20,10 @@ export const CONTEXT_TEMPLATE = `## Background
 `;
 
 export const INPUT_BASE =
-  'rounded-lg border border-slate-200 dark:border-stone-600 bg-white dark:bg-stone-800 ' +
-  'text-slate-800 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-500 ' +
-  'outline-none focus:ring-2 focus:ring-brand-ring';
+  'rounded-lg border border-stone-700 bg-stone-800 ' +
+  'text-stone-100 placeholder-stone-500 ' +
+  'outline-none transition-colors duration-150 ' +
+  'hover:border-stone-500 focus:border-brand-ring';
 
 export const TYPE_CONFIG = {
   feature: {
