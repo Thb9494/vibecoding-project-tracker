@@ -8,6 +8,7 @@ import { GhibliPicker } from '../shared/GhibliPicker';
 export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }) {
   const [editing, setEditing] = useState(null);
   const [pickerFor, setPickerFor] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
 
   const { tasks = [], members = [], name: projectName } = project;
 
@@ -22,6 +23,15 @@ export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }
 
   function handleDelete(id) {
     onUpdateProject({ ...project, tasks: tasks.filter(t => t.id !== id) });
+  }
+
+  function handleDragStart(task) { setDraggingId(task.id); }
+  function handleDragEnd()       { setDraggingId(null); }
+  function handleDrop(newStatus) {
+    if (!draggingId) return;
+    const next = tasks.map(t => t.id === draggingId ? { ...t, status: newStatus } : t);
+    onUpdateProject({ ...project, tasks: next });
+    setDraggingId(null);
   }
 
   const handleHandoff = useCallback((task, newAssignee) => {
@@ -85,6 +95,10 @@ export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }
             onHandoff={handleHandoff}
             getIcon={getIcon}
             projectName={projectName}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDrop={handleDrop}
+            draggingId={draggingId}
           />
         ))}
       </main>
