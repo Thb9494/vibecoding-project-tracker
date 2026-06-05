@@ -65,7 +65,7 @@ export function BoardView({ project, icons, setIcons, onUpdateProject, onToast }
           </div>
           <button
             onClick={() => setEditing('new')}
-            className="flex items-center gap-1.5 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow hover:bg-brand-dark active:scale-95 transition-all"
+            className="flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-800 active:scale-95 transition-all"
           >
             <span className="text-lg leading-none">+</span> New Task
           </button>
