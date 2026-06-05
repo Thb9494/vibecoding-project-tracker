@@ -26,24 +26,29 @@ function EditProjectPopover({ project, onSave, onClose }) {
           <button onClick={onClose} className="text-stone-500 hover:text-stone-200 transition">✕</button>
         </div>
 
-        {/* scrollable body */}
-        <div className="overflow-y-auto px-5 pb-2 flex flex-col gap-4">
-
+        <div className="px-5 pb-5 flex flex-col gap-4">
           {/* preview */}
-          <div className="flex justify-center pt-1">
+          <div className="flex justify-center">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-bold text-white shadow"
               style={{ backgroundColor: color }}>
               {badge || initials(name).slice(0, 2) || '?'}
             </span>
           </div>
 
-          <div className="flex flex-col gap-1">
+          {/* name + save button — always in view */}
+          <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Name</label>
-            <input className={`px-3 py-2 text-sm ${INPUT_BASE}`} value={name}
+            <input autoFocus className={`px-3 py-2 text-sm ${INPUT_BASE}`} value={name}
               onChange={e => setName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()} />
+            <div className="flex gap-2">
+              <button onClick={onClose} className="flex-1 rounded-lg border border-stone-600 py-2 text-xs font-semibold text-stone-300 hover:bg-stone-800 transition">Abbrechen</button>
+              <button onClick={handleSave} disabled={!name.trim()}
+                className="flex-1 rounded-lg bg-blue-700 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-40 transition">Speichern</button>
+            </div>
           </div>
 
+          {/* color */}
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Farbe</label>
             <div className="flex gap-2">
@@ -55,19 +60,13 @@ function EditProjectPopover({ project, onSave, onClose }) {
             </div>
           </div>
 
+          {/* badge */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Kürzel <span className="font-normal normal-case text-stone-500">· max. 2</span></label>
             <input className={`px-3 py-2 text-sm ${INPUT_BASE}`} maxLength={2}
               placeholder={initials(name).slice(0, 2)}
               value={badge} onChange={e => setBadge(e.target.value.toUpperCase().slice(0, 2))} />
           </div>
-        </div>
-
-        {/* footer — always visible */}
-        <div className="flex gap-2 justify-end px-5 py-4 border-t border-stone-800 shrink-0">
-          <button onClick={onClose} className="rounded-lg border border-stone-600 px-3 py-1.5 text-xs font-semibold text-stone-300 hover:bg-stone-800 transition">Abbrechen</button>
-          <button onClick={handleSave} disabled={!name.trim()}
-            className="rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-40 transition">Speichern</button>
         </div>
       </div>
     </div>

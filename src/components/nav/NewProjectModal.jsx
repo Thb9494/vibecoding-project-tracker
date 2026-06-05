@@ -79,7 +79,7 @@ export function NewProjectModal({ onClose, onCreate }) {
           {/* color */}
           <div className="flex flex-col gap-2">
             <label className={L}>Farbe</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2">
               {PROJECT_COLORS.map(c => (
                 <button key={c} onClick={() => setColor(c)}
                   className={`h-7 w-7 rounded-full transition-transform hover:scale-110 ${color === c ? 'ring-2 ring-offset-2 ring-offset-zinc-900 ring-white scale-110' : ''}`}
