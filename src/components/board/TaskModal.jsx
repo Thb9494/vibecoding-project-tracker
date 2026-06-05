@@ -100,28 +100,37 @@ export function TaskModal({ task, members, projectName, onClose, onSave, onDelet
             </div>
             <textarea rows={6} className={`px-3 py-2 text-sm font-mono leading-relaxed resize-y ${INPUT_BASE}`}
               placeholder={CONTEXT_TEMPLATE} value={form.context} onChange={e => set('context', e.target.value)} />
-            <div className="mt-1 flex items-center gap-2">
-              <label className="text-xs text-slate-500 dark:text-stone-400">AI tool</label>
-              <select className={`px-2 py-1 text-xs ${INPUT_BASE}`} value={form.contextTool} onChange={e => set('contextTool', e.target.value)}>
-                <option value="">— none —</option>
-                {CONTEXT_TOOLS.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500 dark:text-stone-400">AI tool</label>
+                <select className={`px-2 py-1 text-xs ${INPUT_BASE}`} value={form.contextTool} onChange={e => set('contextTool', e.target.value)}>
+                  <option value="">— none —</option>
+                  {CONTEXT_TOOLS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              {!isNew && <CopyContextButton task={task} projectName={projectName} />}
             </div>
           </div>
 
           {!isNew && <p className="text-xs text-slate-400 dark:text-stone-500">Created: {task.createdDate}</p>}
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-stone-700">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-stone-700">
           {!isNew ? (
-            <div className="flex items-center gap-2">
-              <button onClick={handleDelete} className="rounded-lg px-4 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition">🗑 Delete</button>
-              <CopyContextButton task={task} projectName={projectName} />
-            </div>
+            <button onClick={handleDelete} title="Delete task"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-base text-red-400 hover:bg-red-950/40 transition">
+              🗑
+            </button>
           ) : <span />}
           <div className="flex gap-2">
-            <button onClick={onClose} className="rounded-lg border border-slate-200 dark:border-stone-600 px-4 py-2 text-sm font-semibold text-slate-600 dark:text-stone-300 hover:bg-slate-50 dark:hover:bg-stone-800 transition">Cancel</button>
-            <button onClick={handleSave} className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark transition">{isNew ? '+ Add Task' : 'Save Changes'}</button>
+            <button onClick={onClose} title="Cancel"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-stone-600 text-stone-300 hover:bg-stone-800 transition text-base leading-none">
+              ✕
+            </button>
+            <button onClick={handleSave} title={isNew ? 'Add task' : 'Save changes'}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-primary text-white hover:bg-brand-dark transition text-base leading-none">
+              ✓
+            </button>
           </div>
         </div>
       </div>
