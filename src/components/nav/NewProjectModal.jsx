@@ -33,7 +33,7 @@ export function NewProjectModal({ onClose, onCreate }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
       onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-surface-page-dark shadow-2xl p-6 flex flex-col gap-5">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-zinc-900 shadow-2xl p-6 flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-800 dark:text-stone-100">New Project</h2>
           <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-stone-800 transition">✕</button>

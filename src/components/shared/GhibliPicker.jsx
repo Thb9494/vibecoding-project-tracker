@@ -4,7 +4,7 @@ export function GhibliPicker({ name, current, onSelect, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end pt-20 pr-6" onClick={onClose}>
       <div
-        className="w-72 rounded-2xl bg-white dark:bg-surface-page-dark shadow-2xl border border-slate-100 dark:border-stone-700 p-4 flex flex-col gap-3"
+        className="w-72 rounded-2xl bg-white dark:bg-zinc-900 shadow-2xl border border-slate-100 dark:border-stone-700 p-4 flex flex-col gap-3"
         onClick={e => e.stopPropagation()}
       >
         <p className="text-xs font-semibold text-slate-500 dark:text-stone-400 uppercase tracking-wide">

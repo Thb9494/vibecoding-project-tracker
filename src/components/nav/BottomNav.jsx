@@ -9,7 +9,7 @@ const VIEWS = [
 
 export function BottomNav({ projects, activeProjectId, activeView, onSelectProject, onSelectView, onCreate }) {
   return (
-    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 px-3 py-2 rounded-2xl border border-white/30 dark:border-stone-700/50 bg-white/75 dark:bg-surface-page-dark/80 backdrop-blur-md shadow-xl">
+    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 px-3 py-2 rounded-2xl border border-white/30 dark:border-stone-700/50 bg-white/75 dark:bg-zinc-900/80 backdrop-blur-md shadow-xl">
       {/* project switcher badge */}
       <ProjectSwitcher
         projects={projects}

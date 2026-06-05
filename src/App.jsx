@@ -80,7 +80,7 @@ export default function App() {
 
   // ── render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-surface-page dark:bg-surface-page-dark transition-colors">
+    <div className="min-h-screen bg-[#faf9fe] dark:bg-zinc-900 transition-colors">
 
       {/* main content */}
       {!activeProject ? (

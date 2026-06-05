@@ -36,7 +36,7 @@ export function ProjectSwitcher({ projects, activeProjectId, onSelect, onCreate 
         {open && (
           <>
             <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-            <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-40 w-56 rounded-2xl bg-white/90 dark:bg-surface-page-dark/90 backdrop-blur-md border border-white/30 dark:border-stone-700/50 shadow-xl py-2">
+            <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-40 w-56 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-white/30 dark:border-stone-700/50 shadow-xl py-2">
               {projects.length === 0 && (
                 <p className="px-4 py-2 text-xs text-slate-400 dark:text-stone-500">No projects yet</p>
               )}
