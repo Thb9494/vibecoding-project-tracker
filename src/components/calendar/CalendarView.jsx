@@ -48,7 +48,6 @@ function GanttRow({ task, rowIdx, barStart, barEnd, todayCol, memberIndex, onCli
   const tc = TYPE_CONFIG[task.type] ?? TYPE_CONFIG.feature;
   const barClass = TASK_BAR[task.type] ?? TASK_BAR.feature;
   const avatarColor = AVATAR_COLORS[memberIndex >= 0 ? memberIndex % AVATAR_COLORS.length : 0] ?? 'bg-slate-400';
-  const showTitle = barEnd > barStart; // show title when bar spans ≥2 cols
 
   return (
     <>
@@ -81,10 +80,8 @@ function GanttRow({ task, rowIdx, barStart, barEnd, todayCol, memberIndex, onCli
         style={{ gridRow: rowIdx, gridColumn: `${barStart} / ${barEnd + 1}` }}
         className={`relative z-10 mx-1 my-2.5 flex items-center rounded-md px-2 text-[11px] font-semibold truncate transition-opacity hover:opacity-70 ${barClass}`}
       >
-        {showTitle
-          ? <><span className="mr-1 shrink-0">{tc.icon}</span><span className="truncate">{task.title}</span></>
-          : <span>{tc.icon}</span>
-        }
+        <span className="mr-1 shrink-0">{tc.icon}</span>
+        <span className="truncate">{task.title}</span>
       </button>
     </>
   );
