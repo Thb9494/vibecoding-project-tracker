@@ -518,7 +518,7 @@ function TaskModal({ task, onClose, onSave, onDelete }) {
             </button>
             <button
               onClick={handleSave}
-              className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark transition"
+              className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 transition"
             >
               {isNew ? '+ Add Task' : 'Save Changes'}
             </button>
@@ -560,6 +560,12 @@ const IconCheck = () => (
   </svg>
 );
 
+const IconHandPoint = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M9 11.5V6a1.5 1.5 0 0 1 3 0v3.5a1.5 1.5 0 0 1 3 0v1a1.5 1.5 0 0 1 3 0v3c0 3.314-2.686 6-6 6H9.5A5.5 5.5 0 0 1 4 14v-2.5a1.5 1.5 0 0 1 3 0V13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+  </svg>
+);
+
 function CopyContextButton({ task, onCopied, stopClick = false }) {
   const [copied, setCopied] = useState(false);
 
@@ -579,7 +585,7 @@ function CopyContextButton({ task, onCopied, stopClick = false }) {
       className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium border transition-all duration-200
         ${copied
           ? 'border-emerald-400 bg-emerald-500 text-white dark:bg-emerald-600 dark:border-emerald-500'
-          : 'border-brand-primary bg-brand-primary text-white hover:bg-brand-dark dark:bg-brand-primary/90 dark:hover:bg-brand-dark'
+          : 'border-blue-600 bg-blue-700 text-white hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-700'
         }`}
     >
       <span className={`transition-transform duration-200 ${copied ? 'scale-110' : ''}`}>
@@ -693,18 +699,24 @@ function TaskCard({ task, onClick, onHandoff, getIcon, onDragStart, onDragEnd, i
           <span className="text-xs font-semibold text-slate-800 dark:text-stone-200">{task.assignee}</span>
         </div>
 
-        {/* hand-off dropdown — stopPropagation so it doesn't open the modal */}
-        <select
-          value=""
-          onClick={e => e.stopPropagation()}
-          onChange={e => { if (e.target.value) onHandoff(task, e.target.value); }}
-          className="text-xs text-slate-600 dark:text-stone-400 bg-transparent dark:[color-scheme:dark] border border-slate-300 dark:border-stone-600 rounded-lg px-1.5 py-0.5 cursor-pointer hover:border-brand-primary dark:hover:border-stone-400 focus:outline-none focus:border-brand-ring transition-colors"
-        >
-          <option value="" disabled>Hand off →</option>
-          {TEAM.filter(name => name !== task.assignee).map(name => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
+        {/* hand-off dropdown */}
+        <div className="relative" onClick={e => e.stopPropagation()}>
+          <select
+            value=""
+            onChange={e => { if (e.target.value) onHandoff(task, e.target.value); }}
+            className="appearance-none pl-6 pr-2 py-1 text-xs font-medium rounded-lg cursor-pointer transition-all focus:outline-none
+              border border-slate-300 bg-white text-slate-700 hover:border-blue-500 hover:text-blue-700 hover:bg-blue-50
+              dark:border-stone-600 dark:bg-stone-700 dark:text-stone-300 dark:hover:border-blue-400 dark:hover:text-blue-300 dark:[color-scheme:dark]"
+          >
+            <option value="" disabled>Hand off</option>
+            {TEAM.filter(name => name !== task.assignee).map(name => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-stone-400">
+            <IconHandPoint />
+          </span>
+        </div>
       </div>
 
       {/* copy context button (M10) */}
@@ -860,7 +872,7 @@ export default function App() {
 
           <button
             onClick={openNew}
-            className="flex items-center gap-1.5 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow hover:bg-brand-dark active:scale-95 transition-all"
+            className="flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-800 active:scale-95 transition-all"
           >
             <span className="text-lg leading-none">+</span> New Task
           </button>
